@@ -172,6 +172,14 @@
     }
 
     window.ajouterCode = async function() {
+
+        // Vérifier si le code existe déjà dans cette section
+        const codeExiste = codesExistants.some(c => c.code.toUpperCase() === codeAgent.toUpperCase());
+
+if (codeExiste) {
+    afficherMessage(`❌ Le code ${codeAgent} est déjà ajouté dans ${section}`, 'erreur');
+    return; // on arrête ici
+}
         let code = document.getElementById('codeAjout').value.trim().toUpperCase();
         let section = document.getElementById('sectionAjout').value;
         let msgAjout = document.getElementById('msgAjout');
@@ -199,6 +207,10 @@
         msgAjout.innerHTML = `<span style="color:green;">✅ Code ${code} ajouté</span>`;
         document.getElementById('codeAjout').value = '';
         afficher();
+        if (code.mange === true) {
+    afficherMessage(`❌ Le code ${code.code} a déjà pris son repas`, 'erreur');
+    return;
+}
     }
 
     window.verifierCode = async function() {
