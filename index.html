@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registre de Pointage - Ecocajou</title>
+<title>Registre de Pointage</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="pageLogin" class="bloc">
-    <h2>Connexion Cantine Ecocajou</h2>
+    <h2>Connexion</h2>
     <input type="password" id="codeAcces" placeholder="Tapez le code d'accès">
     <button onclick="verifierAcces()" class="btn-bleu">Entrer</button>
     <p id="msgErreur" style="color:red;"></p>
@@ -22,14 +22,12 @@
         <input type="date" id="selectDate">
         <button onclick="chargerJour()" class="btn-cyan">Charger ce jour</button>
         <button onclick="nouveauJour()" class="btn-bleu">+ Nouveau Jour</button>
-        
         <div class="nav-bar">
             <select id="navSections" onchange="allerAlaSection()">
                 <option value="">-- Aller à une Section --</option>
             </select>
             <button onclick="toggleCache()" id="btnCache" class="btn-gris">👁️ Cacher Codes</button>
         </div>
-
         <button onclick="window.print()" class="btn-jaune">🖨️ Imprimer</button>
         <button onclick="resetJour()" class="btn-rouge">🗑️ Tout Réinitialiser</button>
         <button onclick="imprimerSection()" class="btn-violet">IMPRIMER LISTE</button>
@@ -55,15 +53,13 @@
         <div id="totalEnregistres">TOTAL ENREGISTRÉS: 0</div>
         <div id="totalMangeGeneral">TOTAL ONT MANGÉ: 0</div>
     </div>
-    <div id="conteneurSections">Chargement...</div>
+    <div id="conteneurSections"></div>
 </div>
 
 <script type="module">
-    // 1. IMPORT FIREBASE
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    // 2. TA CONFIG FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyBo-B3d8LCfHnhf5TQDUOywKy6Wm496bsc",
       authDomain: "ecocajou-cantine.firebaseapp.com",
@@ -74,7 +70,6 @@
       appId: "1:931873154005:web:8b96f6b7bfb7b87374535c"
     };
 
-    // 3. INITIALISER
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const dbRef = ref(db);
@@ -97,7 +92,6 @@
     let jourActuel = new Date().toISOString().split('T')[0];
     let sectionBloquee = "";
 
-    // REMPLIR LES SELECTS
     window.onload = function() {
         let selectAjout = document.getElementById('sectionAjout');
         let selectNav = document.getElementById('navSections');
@@ -128,8 +122,7 @@
     window.nouveauJour = async function() {
         const snapshot = await get(child(dbRef, `registres/${jourActuel}`));
         if (!snapshot.exists()) {
-            let nouveau = {};
-            sections.forEach(s => nouveau[s] = []);
+            let nouveau = {}; sections.forEach(s => nouveau[s] = []);
             await set(ref(db, `registres/${jourActuel}`), nouveau);
         }
         chargerJour();
@@ -150,16 +143,13 @@
     function afficher() {
         document.getElementById('titreDate').innerText = jourActuel;
         let dataJour = allData[jourActuel] || {};
-
         if(sectionBloquee!== "" && dataJour[sectionBloquee]){
             afficherUneSection(sectionBloquee, dataJour[sectionBloquee]);
             return;
         }
-
         let html = '';
         let totalGeneralEnregistres = 0;
         let totalGeneralMange = 0;
-
         sections.forEach(section => {
             let agents = dataJour[section] || [];
             let totalEnregistres = agents.length;
@@ -167,18 +157,15 @@
             totalGeneralEnregistres += totalEnregistres;
             totalGeneralMange += totalMange;
             let idSection = section.replace(/\s+/g, '-');
-
             html += `<div class="section-bloc" id="${idSection}">
-                <h3>${section} <span style="font-size:12px;">(${totalEnregistres})</span> | <span style="color:green;">Mangé: ${totalMange}</span></h3>
+                <h3>${section} <span style="font-size:12px; font-weight:normal;">(${totalEnregistres})</span> | <span style="color:green; font-size:12px;">Mangé: ${totalMange}</span></h3>
                 <ul>`;
             html += agents.map(a => {
                 let codeAffiche = cacheActif? "******" : a.code;
-                return `<li>${codeAffiche} <span class="${a.mange? 'mange' : 'present'}">${a.mange? 'MANGÉ' : 'PRÉSENT'}</span>
-                <button onclick="supprimerCode('${section}', '${a.code}')">X</button></li>`;
+                return `<li>${codeAffiche} <span class="${a.mange? 'mange' : 'present'}">${a.mange? 'MANGÉ' : 'PRÉSENT'}</span> <button onclick="supprimerCode('${section}', '${a.code}')">X</button></li>`;
             }).join('');
             html += `</ul></div>`;
         });
-
         document.getElementById('totalEnregistres').innerText = `TOTAL ENREGISTRÉS: ${totalGeneralEnregistres}`;
         document.getElementById('totalMangeGeneral').innerText = `TOTAL ONT MANGÉ: ${totalGeneralMange}`;
         document.getElementById('conteneurSections').innerHTML = html;
@@ -187,16 +174,29 @@
     window.ajouterCode = async function() {
         let code = document.getElementById('codeAjout').value.trim().toUpperCase();
         let section = document.getElementById('sectionAjout').value;
+        let msgAjout = document.getElementById('msgAjout');
+        msgAjout.innerHTML = '';
         if(!code) return alert("Tapez un code");
+        if(!allData[jourActuel]) {
+            allData[jourActuel] = {};
+            sections.forEach(s => allData[jourActuel][s] = []);
+        }
+        if(!allData[jourActuel][section]) {
+            allData[jourActuel][section] = [];
+        }
         let dejaExiste = false;
         for(let s in allData[jourActuel]) {
-            if(allData[jourActuel][s].find(a => a.code === code)) { dejaExiste = true; break; }
+            if(allData[jourActuel][s] && allData[jourActuel][s].find(a => a.code === code)) {
+                dejaExiste = true; break;
+            }
         }
-        if(dejaExiste) { document.getElementById('msgAjout').innerHTML = `<span style="color:red;">❌ Le code ${code} existe déjà</span>`; return; }
-        
+        if(dejaExiste) {
+            msgAjout.innerHTML = `<span style="color:red;">❌ Le code ${code} existe déjà</span>`;
+            return;
+        }
         allData[jourActuel][section].push({code: code, nom: '', mange: false});
         await sauvegarder();
-        document.getElementById('msgAjout').innerHTML = `<span style="color:green;">✅ Code ${code} ajouté</span>`;
+        msgAjout.innerHTML = `<span style="color:green;">✅ Code ${code} ajouté</span>`;
         document.getElementById('codeAjout').value = '';
         afficher();
     }
@@ -221,9 +221,11 @@
             sectionBloquee = sectionTrouvee;
             afficherUneSection(sectionBloquee, allData[jourActuel][sectionBloquee]);
             document.getElementById('codeVerif').value = '';
+            document.getElementById('codeVerif').focus();
         } else {
             msgVerif.innerHTML = `<span style="color:red;">❌ Code ${code} non trouvé</span>`;
             document.getElementById('codeVerif').value = '';
+            document.getElementById('codeVerif').focus();
         }
     }
 
