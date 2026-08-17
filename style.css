@@ -37,3 +37,13 @@ input, select {padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid 
     color: white; border-radius: 5px;
 }
 h2 {color: #0056b3; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);}
+
+.ligne-outils { 
+    display:flex; 
+    gap:20px; 
+    flex-wrap: wrap; /* pour que ça passe en dessous sur téléphone */
+}
+.ligne-outils .bloc { 
+    flex:1; 
+    min-width: 300px; /* chaque bloc fait au moins 300px */
+}
