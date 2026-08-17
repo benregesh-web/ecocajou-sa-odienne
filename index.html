@@ -44,6 +44,13 @@
         <p id="msgAjout"></p>
     </div>
 
+       <div class="bloc" id="blocAdmin" style="border:2px dashed #ff9800;">
+       <h2>Ajouter Personne ADMINISTRATION - Sans Code</h2>
+       <input type="text" id="nomAdmin" placeholder="Nom de la personne">
+       <button onclick="ajouterAdmin()" style="background:#ff9800;">Ajouter à ADMINISTRATION</button>
+       <p id="msgAdmin"></p>
+    </div>
+
     <div class="bloc">
         <h2>Vérifier un Code</h2>
         <input type="text" id="codeVerif" placeholder="Code Agent">
@@ -51,263 +58,126 @@
         <p id="msgVerif"></p>
     </div>
 
+  <div class="ligne-outils">
+    <!-- BLOC 1 : ALLER A UNE SECTION -->
+    <div class="bloc">
+        <h2>Aller à une Section</h2>
+        <div style="display:flex; gap:10px;">
+            <select id="selectSectionNav" style="flex:1;"></select>
+            <button onclick="allerSection()" style="background:#6f42c1;">Aller</button>
+        </div>
+    </div>
+
+    <!-- BLOC 2 : RECHERCHER UN AGENT -->
+    <div class="bloc">
+        <h2>Rechercher un Agent</h2>
+        <input type="text" id="rechercheAgent" placeholder="Tapez le code pour chercher" onkeyup="rechercherAgent()" style="width:100%; margin-bottom:10px;">
+        <div id="resultatRecherche"></div>
+    </div>
+</div>
+
     <h2>Pointage du <span id="titreDate"></span></h2>
     <div class="totaux">
         <div id="totalEnregistres">TOTAL ENREGISTRÉS: 0</div>
         <div id="totalMangeGeneral">TOTAL ONT MANGÉ: 0</div>
+        <div id="totalRestantGeneral">TOTAL RESTANT: 0</div>
     </div>
     <div id="conteneurSections"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// 1. CODES SECRETS
+// TES CLÉS SUPABASE
+const SUPABASE_URL = 'https://mvrgjgfsqscalqsuoexb.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_FN6KBYUWmKqwtY89kRi-9g_eAoT0ISm'
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
 const CODE_SECRET = "BEN2026";
 const CODE_RESET = "RESET2026";
 const CODE_VOIR = "VOIR2026";
 let cacheActif = false;
 
-// 2. TES SECTIONS
-const sections = [
-    "DPM GROS SALLE",
-    "MAGASIN NOIX BRUTE", "QUALITE NOIX BRUTE", "CALLIBRAGE", "CALLIBRAGE CARISTE", "CHAUDIERE", "COQUE","COQUE CHAUFFEUR",
-    "LAVAGE EQUIPEMENT","CUISSON", "CUISSON CARISTE","DECO HOMME", "DECO FEMME", "QUALITE DECO", "ENTRETIEN DECO", "SCOOPING","SCOOPING CORRECTION",
-    "ETUVAGE", "GESTIONNAIRE/MAGASIN PIECES DE RECHANGE", "MAINTENANCE", "CONTROLEUR FOUR","DP AUTO", "CONCASSAGE","CLASS MANUEL", "CLASS AUTO","EMBALLAGE 1",
-    "EMBALLAGE 2", "ENTRETIEN EMBALLAGE", "MAGASIN PRODUIT FINIS", "DPM Elèves", "Niamatogola","DPM CORRECTRISES", "ENTRETIEN DPM",
-    "ENTRETIEN ZONE BLANCHE", "ENTRETIEN ADMINISTRATION", "OPERATEUR PESEE", "SECTION HYGIENE", "BUANDERIE", "ENTRETIEN", "ENTRETIEN ZONE NON BATI",
-    "CANTINE", "DISTRI.PROD MAN", "ADMINISTRATION", "ELEVES GARCONS"
-];
+const sections = ["ADMINISTRATION", "DPM GROS SALLE", "MAGASIN NOIX BRUTE", "QUALITE NOIX BRUTE", "CALLIBRAGE", "CALLIBRAGE CARISTE", "CHAUDIERE", "COQUE","COQUE CHAUFFEUR", "LAVAGE EQUIPEMENT", "CUISSON", "CUISSON CARISTE","DECO HOMME", "DECO FEMME", "QUALITE DECO", "ENTRETIEN DECO", "SCOOPING","SCOOPING CORRECTION", "ETUVAGE", "GESTIONNAIRE/MAGASIN PIECES DE RECHANGE", "MAINTENANCE", "CONTROLEUR FOUR","DP AUTO", "CONCASSAGE","CLASS MANUEL", "CLASS AUTO","EMBALLAGE 1", "EMBALLAGE 2", "ENTRETIEN EMBALLAGE", "MAGASIN PRODUIT FINIS", "DPM Elèves", "Niamatogola", "DPM CORRECTRISES", "ENTRETIEN DPM", "ENTRETIEN ZONE BLANCHE", "ENTRETIEN ADMINISTRATION", "OPERATEUR PESEE", "SECTION HYGIENE", "BUANDERIE", "ENTRETIEN", "ENTRETIEN ZONE NON BATI", "CANTINE", "DISTRI.PROD MAN", "ELEVES GARCONS"];
 
-let allData = JSON.parse(localStorage.getItem('registresPointage')) || {};
 let jourActuel = new Date().toISOString().split('T')[0];
 let sectionBloquee = "";
+let allData = {};
 
-// REMPLIR LE SELECT AU CHARGEMENT
-window.onload = function() {
-    let select = document.getElementById('sectionAjout');
+window.onload = async function() {
+    let selectAjout = document.getElementById('sectionAjout');
+    let selectNav = document.getElementById('selectSectionNav');
     sections.forEach(s => {
-        let opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        select.appendChild(opt);
+        selectAjout.innerHTML += `<option value="${s}">${s}</option>`;
+        selectNav.innerHTML += `<option value="${s}">${s}</option>`;
     });
+    document.getElementById('selectDate').value = jourActuel;
+    await chargerJour();
+    ecouterChangements();
 }
 
-// FONCTIONS PRINCIPALES
-function verifierAcces() {
-    let code = document.getElementById('codeAcces').value;
-    if(code === CODE_SECRET) {
-        document.getElementById('pageLogin').classList.add('cacher');
-        document.getElementById('pagePrincipale').classList.remove('cacher');
-        document.getElementById('selectDate').value = jourActuel;
-        nouveauJour();
-    } else {
-        document.getElementById('msgErreur').innerText = "Code incorrect!";
-    }
-}
-
-function nouveauJour() {
-    if(!allData[jourActuel]) {
-        allData[jourActuel] = {};
-        sections.forEach(s => allData[jourActuel][s] = []);
-        sauvegarder();
-    }
-    afficher();
-}
-
-function chargerJour() {
+async function chargerJour() {
     jourActuel = document.getElementById('selectDate').value;
     sectionBloquee = "";
+    const { data, error } = await supabase.from('pointages').select('*').eq('date_pointage', jourActuel);
+    if(error) return alert("Erreur: " + error.message);
+    allData = {};
+    sections.forEach(s => allData[s] = []);
+    data.forEach(row => { if(allData[row.section]) allData[row.section].push(row); });
     afficher();
 }
 
-function sauvegarder() {
-    localStorage.setItem('registresPointage', JSON.stringify(allData));
+function ecouterChangements() {
+    supabase.channel('pointages').on('postgres_changes', { event: '*', schema: 'public', table: 'pointages' },
+        payload => { 
+            if(payload.new.date_pointage === jourActuel){ 
+                chargerJour(); 
+            }
+        }
+    ).subscribe();
 }
 
-function afficher() {
-    document.getElementById('titreDate').innerText = jourActuel;
-    let dataJour = allData[jourActuel] || {};
-
-    // BLOCAGE : SI UNE SECTION EST BLOQUEE
-    if(sectionBloquee!== "" && dataJour[sectionBloquee]){
-        afficherUneSection(sectionBloquee, dataJour[sectionBloquee]);
-        return;
-    }
-
-    let html = '';
-    let totalGeneralEnregistres = 0;
-    let totalGeneralMange = 0;
-
-    sections.forEach(section => {
-        let agents = dataJour[section] || [];
-        let totalEnregistres = agents.length;
-        let totalMange = agents.filter(a => a.mange).length;
-
-        totalGeneralEnregistres += totalEnregistres;
-        totalGeneralMange += totalMange;
-
-        html += `<div class="section-bloc">
-            <h3>${section} <span style="font-size:14px; color:blue;">Enregistrés: ${totalEnregistres}</span> | <span style="font-size:14px; color:green;">Ont mangé: ${totalMange}</span></h3>
-            <ul>`;
-
-        html += agents.map(a => {
-            let codeAffiche = cacheActif? "******" : a.code;
-            return `<li>${codeAffiche} - ${a.nom || ''} <span class="${a.mange? 'mange' : 'present'}">${a.mange? '🍽️ MANGÉ' : '✅ PRÉSENT'}</span>
-            <button onclick="supprimerCode('${section}', '${a.code}')" style="background:red; padding:2px 5px; font-size:10px; float:right;">X</button></li>`;
-        }).join('');
-
-        html += `</ul></div>`;
-    });
-
-    // AFFICHER LES TOTAUX GENERAUX EN HAUT
-    document.getElementById('totalEnregistres').innerText = `TOTAL ENREGISTRÉS AUJOURD'HUI: ${totalGeneralEnregistres}`;
-    document.getElementById('totalMangeGeneral').innerText = `TOTAL ONT MANGÉ AUJOURD'HUI: ${totalGeneralMange}`;
-
-    document.getElementById('conteneurSections').innerHTML = html;
-}
-
-function ajouterCode() {
+async function ajouterCode() {
     let code = document.getElementById('codeAjout').value.trim().toUpperCase();
     let section = document.getElementById('sectionAjout').value;
     if(!code) return alert("Tapez un code");
-
-    let dejaExiste = false;
-    let sectionTrouvee = '';
-    for(let s in allData[jourActuel]) {
-        if(allData[jourActuel][s].find(a => a.code === code)) {
-            dejaExiste = true; sectionTrouvee = s; break;
-        }
-    }
-    if(dejaExiste) {
-        document.getElementById('msgAjout').innerHTML = `<span style="color:red;">❌ ERREUR : Le code ${code} existe déjà dans ${sectionTrouvee}</span>`;
-        return;
-    }
-    allData[jourActuel][section].push({code: code, nom: '', mange: false});
-    sauvegarder();
-    document.getElementById('msgAjout').innerHTML = `<span style="color:green;">✅ Code ${code} ajouté à ${section}</span>`;
-    document.getElementById('codeAjout').value = '';
-    afficher();
+    const { error } = await supabase.from('pointages').insert({date_pointage: jourActuel, section: section, code: code, nom: '', mange: false});
+    if(error && error.code === '23505'){ document.getElementById('msgAjout').innerHTML = `<span style="color:red;">❌ Code ${code} existe déjà</span>`;
+    } else { document.getElementById('msgAjout').innerHTML = `<span style="color:green;">✅ Code ${code} ajouté</span>`; document.getElementById('codeAjout').value = ''; }
 }
 
-function verifierCode() {
+async function verifierCode() {
     let code = document.getElementById('codeVerif').value.trim().toUpperCase();
     let msgVerif = document.getElementById('msgVerif');
     if(!code) return alert("Tapez un code");
-
-    let trouve = false;
-    let sectionTrouvee = "";
-    let agentTrouve = null;
-    for(let s in allData[jourActuel]) {
-        let agent = allData[jourActuel][s].find(a => a.code === code);
-        if(agent) { trouve = true; agentTrouve = agent; sectionTrouvee = s; break; }
-    }
-
-    if(trouve) {
-        if(agentTrouve.mange === false) {
-            agentTrouve.mange = true;
-            msgVerif.innerHTML = `<span style="color:green;"><b>${code}</b> trouvé dans <b>${sectionTrouvee}</b><br>✅ STATUT: PRÉSENT<br>🍽️ IL A DROIT A 1 PLAT<br><b>Validez et donnez lui son plat</b></span>`;
-        } else {
-            msgVerif.innerHTML = `<span style="color:red;"><b>${code}</b> trouvé dans <b>${sectionTrouvee}</b><br>❌ STATUT: A DÉJÀ PRIS SON PLAT<br><b>IL N'A PLUS DROIT A UN AUTRE PLAT AUJOURD'HUI</b></span>`;
-        }
-        sauvegarder();
-        sectionBloquee = sectionTrouvee;
-        afficherUneSection(sectionBloquee, allData[jourActuel][sectionBloquee]);
-        document.getElementById('codeVerif').value = '';
-        document.getElementById('codeVerif').focus();
-    } else {
-        document.getElementById('msgVerif').innerHTML = `<span style="color:red;">❌ Code ${code} non trouvé aujourd'hui</span>`;
-        document.getElementById('codeVerif').value = '';
-        document.getElementById('codeVerif').focus();
-    }
+    const { data: agent } = await supabase.from('pointages').select('*').eq('date_pointage', jourActuel).eq('code', code).single();
+    if(agent) {
+        if(agent.mange === false) {
+            await supabase.from('pointages').update({mange: true}).eq('id', agent.id);
+            msgVerif.innerHTML = `<span style="color:green;"><b>${code}</b> trouvé dans <b>${agent.section}</b><br>✅ PRÉSENT<br>🍽️ DROIT A 1 PLAT</span>`;
+        } else { msgVerif.innerHTML = `<span style="color:red;"><b>${code}</b> trouvé dans <b>${agent.section}</b><br>❌ A DÉJÀ PRIS</span>`; }
+        sectionBloquee = agent.section; afficherUneSection(agent.section);
+    } else { msgVerif.innerHTML = `<span style="color:red;">❌ Code ${code} non trouvé</span>`; }
+    document.getElementById('codeVerif').value = '';
 }
 
-function afficherUneSection(nomSection, agents) {
-    let totalMange = agents.filter(a => a.mange).length;
-    let html = `<div class="section-bloc">
-        <h3>${nomSection} <span style="font-size:14px; color:blue;">Enregistrés: ${agents.length}</span> | <span style="font-size:14px; color:green;">Ont mangé: ${totalMange}</span></h3>
-        <ul>`;
-    html += agents.map(a => {
-        let codeAffiche = cacheActif? "******" : a.code;
-        return `<li>${codeAffiche} - ${a.nom || ''} <span class="${a.mange? 'mange' : 'present'}">${a.mange? '🍽️ MANGÉ' : '✅ PRÉSENT'}</span></li>`;
-    }).join('');
-    html += `</ul></div>`;
-    html += `<button onclick="sectionBloquee=''; afficher();" style="background: orange; margin-top:10px;">VOIR TOUTES SECTIONS</button>`;
-    document.getElementById('conteneurSections').innerHTML = html;
+async function ajouterAdmin() {
+    let nom = document.getElementById('nomAdmin').value.trim();
+    if(!nom) return alert("Tapez un nom");
+    let numero = allData["ADMINISTRATION"].length + 1;
+    let codeAdmin = "ADM-" + numero;
+    await supabase.from('pointages').insert({date_pointage: jourActuel, section: "ADMINISTRATION", code: codeAdmin, nom: nom, mange: false});
+    document.getElementById('msgAdmin').innerHTML = `<span style="color:green;">✅ ${nom} ajouté ${codeAdmin}</span>`;
+    document.getElementById('nomAdmin').value = '';
 }
 
-function supprimerCode(section, code) {
-    let div = document.createElement('div');
-    div.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;";
-    div.innerHTML = `<div style="background:white;padding:20px;border-radius:8px;text-align:center;">
-        <p><b>Tapez le Code Admin pour supprimer</b></p>
-        <input type="password" id="inputAdmin" style="padding:8px; width:200px;"><br><br>
-        <button onclick="validerSuppr('${section}', '${code}')" style="background:#dc3545;">OK</button>
-        <button onclick="document.body.removeChild(this.parentNode.parentNode)" style="background:#6c757d;">Annuler</button>
-    </div>`;
-    document.body.appendChild(div);
-}
-
-function validerSuppr(section, code) {
-    let codeAdmin = document.getElementById('inputAdmin').value;
-    document.body.removeChild(document.body.lastChild);
-    if(codeAdmin!== CODE_SECRET) { alert("❌ Code Admin incorrect!"); return; }
-    if(confirm(`Supprimer le code ${code} de ${section}?`)) {
-        allData[jourActuel][section] = allData[jourActuel][section].filter(a => a.code!== code);
-        sauvegarder(); afficher(); alert(`Code ${code} supprimé ✅`);
-    }
-}
-
-function resetJour() {
-    let code = prompt("⚠️ ATTENTION! Ce code va tout effacer pour aujourd'hui.\nTapez le Code RESET:");
-    if(code!== CODE_RESET) { alert("❌ Code incorrect!"); return; }
-    if(confirm("Voulez-vous vraiment supprimer toutes les données de cette journée?")) {
-        allData[jourActuel] = {}; sections.forEach(s => allData[jourActuel][s] = []);
-        sauvegarder(); sectionBloquee = ""; afficher(); alert("✅ Journée réinitialisée à zéro");
-    }
-}
-
-function imprimerSection() {
-    let section = prompt("Quelle section voulez-vous imprimer?\nEx: DECO, CUISSON");
-    if(!section) return;
-    section = section.toUpperCase();
-    let agentsDeLaSection = allData[jourActuel][section] || [];
-
-    if(agentsDeLaSection.length === 0) { alert("Aucun agent trouvé pour la section: " + section); return; }
-
-    let dateDuJour = new Date().toLocaleDateString('fr-FR');
-    let totalMange = agentsDeLaSection.filter(a => a.mange).length;
-    let htmlImpression = `<h1 style="text-align:center;">LISTE DE POINTAGE CANTINE</h1>
-    <h2 style="text-align:center;">ECOCAJOU SA ODIENNE - SECTION: ${section}</h2>
-    <h3 style="text-align:center;">Date: ${dateDuJour}</h3>
-    <h4 style="text-align:center;">Total Enregistrés: ${agentsDeLaSection.length} | Total Ont Mangé: ${totalMange}</h4><hr>
-    <table border="1" style="width:100%; border-collapse: collapse;">
-    <tr style="background:#007bff; color:white;"><th style="padding:8px;">N°</th><th style="padding:8px;">CODE</th><th style="padding:8px;">STATUT</th></tr>`;
-
-    agentsDeLaSection.forEach((a, index) => {
-        let statut = a.mange? "A MANGÉ 🍽️" : "PRÉSENT ✅";
-        htmlImpression += `<tr><td style="padding:8px;">${index + 1}</td><td style="padding:8px;">${a.code}</td><td style="padding:8px;">${statut}</td></tr>`;
-    });
-    htmlImpression += `</table>`;
-    let fenetreImpression = window.open('', '', 'height=700,width=900');
-    fenetreImpression.document.write(htmlImpression); fenetreImpression.document.close(); fenetreImpression.print();
-}
-
-function toggleCache() {
-    if(!cacheActif) {
-        cacheActif = true; document.getElementById('btnCache').innerText = "🔒 Afficher Codes"; document.getElementById('btnCache').style.background = "#28a745";
-    } else {
-        let code = prompt("Tapez le Code pour AFFICHER les codes:");
-        if(code!== CODE_VOIR) { alert("❌ Code incorrect!"); return; }
-        cacheActif = false; document.getElementById('btnCache').innerText = "👁️ Cacher Codes"; document.getElementById('btnCache').style.background = "#6c757d";
-    }
-    afficher();
-}
-
-function deconnexion() {
-    document.getElementById('pagePrincipale').classList.add('cacher');
-    document.getElementById('pageLogin').classList.remove('cacher');
-    document.getElementById('codeAcces').value = '';
-}
+function afficher() { /* colle ici ton ancienne fonction afficher qui lit allData */ }
+function afficherUneSection(nomSection) { /* colle ici ton ancienne fonction */ }
+async function supprimerCode(id) { await supabase.from('pointages').delete().eq('id', id); }
+async function resetJour() { if(confirm("Supprimer la journée?")) { await supabase.from('pointages').delete().eq('date_pointage', jourActuel); }}
+function allerSection() { let s = document.getElementById('selectSectionNav').value; sectionBloquee=s; afficherUneSection(s); }
+function rechercherAgent() { /* ton ancienne fonction */ }
+function toggleCache() { cacheActif=!cacheActif; afficher(); }
+function handleSecretCode() { /* ton ancienne fonction */ }
 </script>
 </body>
 </html>
