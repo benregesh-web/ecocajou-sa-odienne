@@ -87,7 +87,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// TES CLÉS SUPABASE
+// CONFIG SUPABASE - NE TOUCHE PAS
 const SUPABASE_URL = 'https://mvrgjgfsqscalqsuoexb.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_FN6KBYUWmKqwtY89kRi-9g_eAoT0ISm'
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -128,11 +128,7 @@ async function chargerJour() {
 
 function ecouterChangements() {
     supabase.channel('pointages').on('postgres_changes', { event: '*', schema: 'public', table: 'pointages' },
-        payload => { 
-            if(payload.new.date_pointage === jourActuel){ 
-                chargerJour(); 
-            }
-        }
+        payload => { if(payload.new.date_pointage === jourActuel){ chargerJour(); } }
     ).subscribe();
 }
 
@@ -163,21 +159,99 @@ async function verifierCode() {
 async function ajouterAdmin() {
     let nom = document.getElementById('nomAdmin').value.trim();
     if(!nom) return alert("Tapez un nom");
-    let numero = allData["ADMINISTRATION"].length + 1;
+    let numero = allData["ADMINISTRATION"]? allData["ADMINISTRATION"].length + 1 : 1;
     let codeAdmin = "ADM-" + numero;
     await supabase.from('pointages').insert({date_pointage: jourActuel, section: "ADMINISTRATION", code: codeAdmin, nom: nom, mange: false});
     document.getElementById('msgAdmin').innerHTML = `<span style="color:green;">✅ ${nom} ajouté ${codeAdmin}</span>`;
     document.getElementById('nomAdmin').value = '';
 }
 
-function afficher() { /* colle ici ton ancienne fonction afficher qui lit allData */ }
-function afficherUneSection(nomSection) { /* colle ici ton ancienne fonction */ }
+de === CODE_SECRET) {
+        document.getElementById('pageLogin').classList.add('cacher');
+        document.getElementById('pagePrincipale').classList.remove('cacher');
+        document.getElementById('selectDate').value = jourActuel;
+        nouveauJour();
+    } else {
+        document.getElementById('msgErreur').innerText = "Code incorrect!";
+    }
+}
+
+function nouveauJour() {
+    if(!allData[jourActuel]) {
+        allData[jourActuel] = {};
+        sections.forEach(s => allData[jourActuel][s] = []);
+        sauvegarder();
+    }
+    afficher();
+}
+
+function chargerJour() {
+    jourActuel = document.getElementById('selectDate').value;
+    sectionBloquee = "";
+    afficher();
+}
+
+function sauvegarder() {
+    localStorage.setItem('registresPointage', JSON.stringify(allData));
+}
+
+function afficher() {
+    document.getElementById('titreDate').innerText = jourActuel;
+    let dataJour = allData[jourActuel] || {};
+
+    if(sectionBloquee!== "" && dataJour[sectionBloquee]){
+        afficherUneSection(sectionBloquee, dataJour[sectionBloquee]);
+        return;
+    }
+
+    let html = '';
+    let totalGeneralEnregistres = 0;
+    let totalGeneralMange = 0;
+    let totalGeneralRestant = 0; // NOUVEAU
+
+    sections.forEach(section => {
+        let agents = dataJour[section] || [];
+        let totalEnregistres = agents.length;
+        let totalMange = agents.filter(a => a.mange).length;
+        let totalRestant = totalEnregistres - totalMange; // NOUVEAU
+
+        totalGeneralEnregistres += totalEnregistres;
+        totalGeneralMange += totalMange;
+        totalGeneralRestant += totalRestant; // NOUVEAU
+
+        // AJOUT DU TOTAL RESTANT ICI
+        html += `<div class="section-bloc">
+            <h3>${section}
+                <span style="font-size:14px; color:blue;">Enregistrés: ${totalEnregistres}</span> |
+                <span style="font-size:14px; color:green;">Ont mangé: ${totalMange}</span> |
+                <span style="font-size:14px; color:red;">Restant: ${totalRestant}</span> <!-- NOUVEAU -->
+            </h3>
+            <ul>`;
+        html += agents.map(a => {
+            let codeAffiche = cacheActif? "******" : a.code;
+            return `<li>${codeAffiche} - ${a.nom || ''} <span class="${a.mange? 'mange' : 'present'}">${a.mange? '🍽️ MANGÉ' : '✅ PRÉSENT'}</span> <button onclick="supprimerCode('${section}', '${a.code}')" style="background:red; padding:2px 5px; font-size:10px; float:right;">X</button></li>`;
+        }).join('');
+        html += `</ul></div>`;
+    });
+
+    // MISE A JOUR DES 3 TOTAUX GENERAUX
+    document.getElementById('totalEnregistres').innerText = `TOTAL ENREGISTRÉS AUJOURD'HUI: ${totalGeneralEnregistres}`;
+    document.getElementById('totalMangeGeneral').innerText = `TOTAL ONT MANGÉ AUJOURD'HUI: ${totalGeneralMange}`;
+    document.getElementById('totalRestantGeneral').innerText = `TOTAL RESTANT AUJOURD'HUI: ${totalGeneralRestant}`; // NOUVEAU
+
+    document.getElementById('conteneurSections').innerHTML = html;
+}
+
+function afficherUneSection(nomSection) {
+    // Colle ici ta fonction afficherUneSection
+}
 async function supprimerCode(id) { await supabase.from('pointages').delete().eq('id', id); }
 async function resetJour() { if(confirm("Supprimer la journée?")) { await supabase.from('pointages').delete().eq('date_pointage', jourActuel); }}
 function allerSection() { let s = document.getElementById('selectSectionNav').value; sectionBloquee=s; afficherUneSection(s); }
-function rechercherAgent() { /* ton ancienne fonction */ }
+function rechercherAgent() { /* ta fonction */ }
 function toggleCache() { cacheActif=!cacheActif; afficher(); }
-function handleSecretCode() { /* ton ancienne fonction */ }
+function handleSecretCode() { /* ta fonction */ }
+</script>
 </script>
 </body>
 </html>
