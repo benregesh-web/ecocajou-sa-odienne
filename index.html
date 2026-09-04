@@ -1,447 +1,71 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Registre de Pointage</title>
-<link rel="stylesheet" href="style.css">
-<style>
-.cacher { display: none; }
-.bloc { border:1px solid #ccc; padding:15px; margin:10px; border-radius:8px; }
-.section-bloc { border:1px solid #007bff; padding:10px; margin:5px 0; }
-.mange { color: green; font-weight: bold; }
-.present { color: orange; }
-.totaux { display:flex; gap:20px; margin:10px 0; }
-.totaux div { background:#f0f0f0; padding:10px; border-radius:5px; font-weight:bold; }
-</style>
-</head>
-<body>
-<div id="pageLogin" class="bloc">
-    <h2>Connexion</h2>
-    <input type="password" id="codeAcces" placeholder="Tapez le code d'accès">
-    <button onclick="verifierAcces()" style="background:#007bff;">Entrer</button>
-    <p id="msgErreur" style="color:red;"></p>
-</div>
-
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cantine ECOCAJOU - Firebase Historique</title><style>body{font-family:Arial;margin:0;padding:10px;background:#f5f5f5}.cacher{display:none}.bloc{border:1px solid #ccc;padding:12px;margin:8px 0;border-radius:8px;background:white}.section-bloc{border:1px solid #007bff;padding:8px;margin:5px 0;border-radius:6px;background:#fff}.mange{color:green;font-weight:bold}.present{color:orange}.totaux{display:flex;gap:8px;flex-wrap:wrap}.totaux div{flex:1;background:#eee;padding:10px;border-radius:6px;font-weight:bold;text-align:center}.online{position:fixed;top:5px;right:5px;background:#25D366;color:white;padding:5px 10px;border-radius:20px;font-size:11px;z-index:999}@media print{.no-print{display:none} body{background:white}}</style></head><body>
+<div class="online no-print">🟢 Live Firebase - Historique Sauvegardé</div>
+<div id="pageLogin" class="bloc"><h2>ECOCAJOU CANTINE - LOGIN</h2><input type="password" id="codeAcces" placeholder="BEN2026" style="padding:10px"><button onclick="verifierAcces()" style="background:#007bff;color:white;padding:10px;border:none;border-radius:6px">Entrer</button><p id="msgErreur" style="color:red"></p></div>
 <div id="pagePrincipale" class="cacher">
-    <div class="bloc">
-        <button onclick="deconnexion()" style="background:red; float:right;">Déconnexion</button>
-        <h2>GESTION CANTINE - ECOCAJOU SA ODIENNE</h2>
-        <label>Choisir Date: </label>
-        <input type="date" id="selectDate">
-        <button onclick="chargerJour()" style="background:#17a2b8;">Charger ce jour</button>
-        <button onclick="nouveauJour()" style="background:#007bff;">+ Nouveau Jour Aujourd'hui</button>
-        <button onclick="window.print()" style="background:#ffc107; color:#000;">🖨️ Imprimer</button>
-        <button onclick="resetJour()" style="background:#dc3545;">🗑️ Tout Réinitialiser</button>
-        <button onclick="imprimerSection()" style="background: purple;">IMPRIMER LISTE</button>
-        <button onclick="toggleCache()" id="btnCache" style="background:#6c757d;">👁️ Cacher Codes</button>
-    </div>
-
-    <div class="bloc">
-        <h2>Ajouter un Code</h2>
-        <input type="text" id="codeAjout" placeholder="Code Agent">
-        <select id="sectionAjout"></select>
-        <button onclick="ajouterCode()" style="background:#28a745;">Ajouter</button>
-        <p id="msgAjout"></p>
-    </div>
-
-       <div class="bloc" id="blocAdmin" style="border:2px dashed #ff9800;">
-       <h2>Ajouter Personne ADMINISTRATION - Sans Code</h2>
-       <input type="text" id="nomAdmin" placeholder="Nom de la personne">
-       <button onclick="ajouterAdmin()" style="background:#ff9800;">Ajouter à ADMINISTRATION</button>
-       <p id="msgAdmin"></p>
-    </div>
-
-    <div class="bloc">
-        <h2>Vérifier un Code</h2>
-        <input type="text" id="codeVerif" placeholder="Code Agent">
-        <button onclick="verifierCode()" style="background:#17a2b8;">Vérifier</button>
-        <p id="msgVerif"></p>
-    </div>
-
-  <div class="ligne-outils">
-    <!-- BLOC 1 : ALLER A UNE SECTION -->
-    <div class="bloc">
-        <h2>Aller à une Section</h2>
-        <div style="display:flex; gap:10px;">
-            <select id="selectSectionNav" style="flex:1;"></select>
-            <button onclick="allerSection()" style="background:#6f42c1;">Aller</button>
-        </div>
-    </div>
-
-    <!-- BLOC 2 : RECHERCHER UN AGENT -->
-    <div class="bloc">
-        <h2>Rechercher un Agent</h2>
-        <input type="text" id="rechercheAgent" placeholder="Tapez le code pour chercher" onkeyup="rechercherAgent()" style="width:100%; margin-bottom:10px;">
-        <div id="resultatRecherche"></div>
-    </div>
+<div class="bloc no-print"><button onclick="deconnexion()" style="background:red;float:right;color:white;padding:6px;border:none;border-radius:4px">Sortir</button><h2 style="margin:0">GESTION CANTINE ECOCAJOU - FIREBASE + HISTORIQUE</h2><p style="font-size:12px;color:green">✅ Tout reste stocké. Tu peux voir n'importe quel jour passé.</p>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><input type="date" id="selectDate" style="padding:8px"><button onclick="chargerJour()" style="background:#17a2b8;color:white;padding:8px;border:none;border-radius:5px">📅 Voir ce jour</button><button onclick="aujourdhui()" style="background:#007bff;color:white;padding:8px;border:none;border-radius:5px">Aujourd'hui</button><button onclick="imprimerTout()" style="background:purple;color:white;padding:8px;border:none;border-radius:5px">🖨️ IMPRIMER TOUT CE JOUR</button><button onclick="imprimerSectionPrompt()" style="background:#6f42c1;color:white;padding:8px;border:none;border-radius:5px">🖨️ Imprimer 1 Section</button><button onclick="resetJour()" style="background:#dc3545;color:white;padding:8px;border:none;border-radius:5px">🗑️ Reset Jour</button></div>
 </div>
 
-    <h2>Pointage du <span id="titreDate"></span></h2>
-    <div class="totaux">
-        <div id="totalEnregistres">TOTAL ENREGISTRÉS: 0</div>
-        <div id="totalMangeGeneral">TOTAL ONT MANGÉ: 0</div>
-        <div id="totalRestantGeneral">TOTAL RESTANT: 0</div>
-    </div>
-    <div id="conteneurSections"></div>
+<div class="bloc no-print"><h3>➕ Ajouter Code (Anti-doublon Global Firebase)</h3><input type="text" id="codeAjout" placeholder="Code Agent" style="padding:10px;width:180px"><select id="sectionAjout" style="padding:10px"></select><button onclick="ajouterCode()" style="background:#28a745;color:white;padding:10px;border:none;border-radius:6px">Ajouter</button><p id="msgAjout"></p></div>
+
+<div class="bloc no-print"><h3>🍽️ Vérifier / Donner Plat</h3><input type="text" id="codeVerif" placeholder="Code Agent" style="padding:10px;width:180px"><button onclick="verifierCode()" style="background:#17a2b8;color:white;padding:10px;border:none;border-radius:6px">Vérifier</button><p id="msgVerif"></p></div>
+
+<div class="bloc no-print"><div style="display:flex;gap:10px"><select id="selectSectionNav" style="flex:1;padding:8px"></select><button onclick="allerSection()" style="background:#6f42c1;color:white;padding:8px;border:none;border-radius:5px">Aller à Section</button><input type="text" id="rechercheAgent" placeholder="Rechercher code..." onkeyup="rechercherAgent()" style="flex:1;padding:8px"></div><div id="resultatRecherche"></div></div>
+
+<h2 style="text-align:center">Pointage du <span id="titreDate"></span> <span id="statutLive" style="font-size:12px;color:green">(Live)</span></h2>
+<div class="totaux"><div id="totalEnregistres">ENREGISTRÉS: 0</div><div id="totalMangeGeneral">ONT MANGÉ: 0</div><div id="totalRestantGeneral">RESTANT: 0</div></div>
+<div id="conteneurSections"></div>
 </div>
 
-<script>
-// 1. CODES SECRETS
-const CODE_SECRET = "BEN2026";
-const CODE_RESET = "RESET2026";
-const CODE_VOIR = "VOIR2026";
-let cacheActif = false;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+const firebaseConfig={apiKey:"AIzaSyD0_1oZblysKviAaknavtTZCoM68J9_GKY",authDomain:"sana-hotel-internationnal-odie.firebaseapp.com",databaseURL:"https://sana-hotel-internationnal-odie-default-rtdb.firebaseio.com",projectId:"sana-hotel-internationnal-odie",storageBucket:"sana-hotel-internationnal-odie.firebasestorage.app",messagingSenderId:"10660407067",appId:"1:10660407067:web:7e20b4ab80f4db542a55be"};
+const app=initializeApp(firebaseConfig); const db=getDatabase(app);
 
-// 2. TES SECTIONS
-const sections = [
-    "DPM GROS SALLE",
-    "MAGASIN NOIX BRUTE", "QUALITE NOIX BRUTE", "CALLIBRAGE", "CALLIBRAGE CARISTE", "CHAUDIERE", "COQUE","COQUE CHAUFFEUR",
-    "LAVAGE EQUIPEMENT","CUISSON", "CUISSON CARISTE","DECO HOMME", "DECO FEMME", "QUALITE DECO", "ENTRETIEN DECO", "SCOOPING","SCOOPING CORRECTION",
-    "ETUVAGE", "GESTIONNAIRE/MAGASIN PIECES DE RECHANGE", "MAINTENANCE", "CONTROLEUR FOUR","DP AUTO", "CONCASSAGE","CLASS MANUEL", "CLASS AUTO","EMBALLAGE 1",
-    "EMBALLAGE 2", "ENTRETIEN EMBALLAGE", "MAGASIN PRODUIT FINIS", "DPM Elèves", "Niamatogola","DPM CORRECTRISES", "ENTRETIEN DPM",
-    "ENTRETIEN ZONE BLANCHE", "ENTRETIEN ADMINISTRATION", "OPERATEUR PESEE", "SECTION HYGIENE", "BUANDERIE", "ENTRETIEN", "ENTRETIEN ZONE NON BATI",
-    "CANTINE", "DISTRI.PROD MAN", "ADMINISTRATION", "ELEVES GARCONS"
-];
+const CODE_SECRET="BEN2026"; const CODE_RESET="RESET2026";
+const sections=["DPM GROS SALLE","MAGASIN NOIX BRUTE","QUALITE NOIX BRUTE","CALLIBRAGE","CALLIBRAGE CARISTE","CHAUDIERE","COQUE","COQUE CHAUFFEUR","LAVAGE EQUIPEMENT","CUISSON","CUISSON CARISTE","DECO HOMME","DECO FEMME","QUALITE DECO","ENTRETIEN DECO","SCOOPING","SCOOPING CORRECTION","ETUVAGE","GESTIONNAIRE/MAGASIN PIECES DE RECHANGE","MAINTENANCE","CONTROLEUR FOUR","DP AUTO","CONCASSAGE","CLASS MANUEL","CLASS AUTO","EMBALLAGE 1","EMBALLAGE 2","ENTRETIEN EMBALLAGE","MAGASIN PRODUIT FINIS","DPM Elèves","Niamatogola","DPM CORRECTRISES","ENTRETIEN DPM","ENTRETIEN ZONE BLANCHE","ENTRETIEN ADMINISTRATION","OPERATEUR PESEE","SECTION HYGIENE","BUANDERIE","ENTRETIEN","ENTRETIEN ZONE NON BATI","CANTINE","DISTRI.PROD MAN","ADMINISTRATION","ELEVES GARCONS"];
+let jourActuel=new Date().toISOString().split('T')[0]; let allData={}; let sectionBloquee=""; let unsubscribe=null;
 
-let allData = JSON.parse(localStorage.getItem('registresPointage')) || {};
-let jourActuel = new Date().toISOString().split('T')[0];
-let sectionBloquee = "";
+window.onload=()=>{ let s1=document.getElementById('sectionAjout'), s2=document.getElementById('selectSectionNav'); sections.forEach(s=>{ let o1=document.createElement('option'); o1.value=s; o1.textContent=s; s1.appendChild(o1); let o2=document.createElement('option'); o2.value=s; o2.textContent=s; s2.appendChild(o2); }); document.getElementById('selectDate').value=jourActuel; };
 
-// REMPLIR LE SELECT AU CHARGEMENT
-window.onload = function() {
-    let selectAjout = document.getElementById('sectionAjout');
-    let selectNav = document.getElementById('selectSectionNav'); // NOUVEAU
-
-    sections.forEach(s => {
-        let opt1 = document.createElement('option');
-        opt1.value = s;
-        opt1.textContent = s;
-        selectAjout.appendChild(opt1);
-
-        let opt2 = document.createElement('option'); // NOUVEAU
-        opt2.value = s;
-        opt2.textContent = s;
-        selectNav.appendChild(opt2); // NOUVEAU
-    });
+function ecouterJour(){
+ if(unsubscribe) unsubscribe(); // coupe ancien listener
+ onValue(ref(db,'cantine/'+jourActuel),(snap)=>{ allData=snap.val()||{}; afficher(); });
+ document.getElementById('titreDate').innerText=jourActuel;
 }
-// FONCTIONS PRINCIPALES
-function verifierAcces() {
-    let code = document.getElementById('codeAcces').value;
-    if(code === CODE_SECRET) {
-        document.getElementById('pageLogin').classList.add('cacher');
-        document.getElementById('pagePrincipale').classList.remove('cacher');
-        document.getElementById('selectDate').value = jourActuel;
-        nouveauJour();
-    } else {
-        document.getElementById('msgErreur').innerText = "Code incorrect!";
-    }
+window.verifierAcces=()=>{ if(document.getElementById('codeAcces').value===CODE_SECRET){ document.getElementById('pageLogin').classList.add('cacher'); document.getElementById('pagePrincipale').classList.remove('cacher'); ecouterJour(); } else document.getElementById('msgErreur').innerText="Faux code"; }
+window.aujourdhui=()=>{ jourActuel=new Date().toISOString().split('T')[0]; document.getElementById('selectDate').value=jourActuel; sectionBloquee=""; ecouterJour(); }
+window.chargerJour=()=>{ jourActuel=document.getElementById('selectDate').value; if(!jourActuel) return alert("Choisis date"); sectionBloquee=""; ecouterJour(); }
+
+function existe(code){ for(let sec in allData){ if(allData[sec] && allData[sec][code]) return sec; } return null; }
+
+window.ajouterCode=async()=>{ let code=document.getElementById('codeAjout').value.trim().toUpperCase(); let sec=document.getElementById('sectionAjout').value; if(!code) return alert("Code vide"); let ex=existe(code); if(ex){ document.getElementById('msgAjout').innerHTML=`<span style="color:red">❌ ${code} existe déjà dans ${ex} le ${jourActuel} - Doublon bloqué</span>`; return; } await set(ref(db,'cantine/'+jourActuel+'/'+sec+'/'+code),{code,mange:false,heure:Date.now()}); document.getElementById('msgAjout').innerHTML=`<span style="color:green">✅ ${code} ajouté à ${sec} pour ${jourActuel}</span>`; document.getElementById('codeAjout').value=''; }
+
+window.verifierCode=async()=>{ let code=document.getElementById('codeVerif').value.trim().toUpperCase(); if(!code) return; let sec=existe(code); let msg=document.getElementById('msgVerif'); if(!sec){ msg.innerHTML=`<span style="color:red">❌ ${code} non trouvé le ${jourActuel}</span>`; return; } let ag=allData[sec][code]; if(!ag.mange){ await set(ref(db,'cantine/'+jourActuel+'/'+sec+'/'+code),{...ag,mange:true,heureMange:Date.now()}); msg.innerHTML=`<span style="color:green">✅ ${code} (${sec}) - PRÉSENT → Donne 1 plat - MANGÉ validé partout</span>`; } else { msg.innerHTML=`<span style="color:red">❌ ${code} (${sec}) - A DÉJÀ MANGÉ le ${jourActuel} à ${ag.heureMange?new Date(ag.heureMange).toLocaleTimeString():''}</span>`; } sectionBloquee=sec; document.getElementById('codeVerif').value=''; }
+
+window.afficher=()=>{ if(sectionBloquee && allData[sectionBloquee]){ afficherUne(sectionBloquee); return; } let html=''; let totE=0,totM=0; sections.forEach(sec=>{ let obj=allData[sec]||{}; let arr=Object.values(obj); let t=arr.length; let m=arr.filter(a=>a.mange).length; if(t===0) return; totE+=t; totM+=m; html+=`<div class="section-bloc"><h3>${sec} - Enr:${t} | Mang:${m} | Rest:${t-m}</h3><ul>`; html+=arr.map(a=>`<li>${a.code} <span class="${a.mange?'mange':'present'}">${a.mange?'🍽️ MANGÉ'+(a.heureMange?' à '+new Date(a.heureMange).toLocaleTimeString():''):'✅ PRÉSENT'}</span> <button onclick="supprimerCode('${sec}','${a.code}')" class="no-print" style="background:red;color:white;border:none;padding:2px 6px;border-radius:3px;float:right">X</button></li>`).join(''); html+=`</ul></div>`; }); if(html==='') html='<div class="bloc">Aucune donnée pour '+jourActuel+' - Ajoute des codes</div>'; document.getElementById('totalEnregistres').innerText=`ENREGISTRÉS ${jourActuel}: ${totE}`; document.getElementById('totalMangeGeneral').innerText=`ONT MANGÉ: ${totM}`; document.getElementById('totalRestantGeneral').innerText=`RESTANT: ${totE-totM}`; document.getElementById('conteneurSections').innerHTML=html; }
+function afficherUne(sec){ let obj=allData[sec]||{}; let arr=Object.values(obj); let m=arr.filter(a=>a.mange).length; let html=`<div class="section-bloc"><h3>${sec} - ${jourActuel} - Enr:${arr.length} | Mang:${m} | Rest:${arr.length-m}</h3><ul>`+arr.map(a=>`<li>${a.code} <span class="${a.mange?'mange':'present'}">${a.mange?'🍽️ MANGÉ':'✅ PRÉSENT'}</span></li>`).join('')+`</ul></div><button onclick="sectionBloquee='';afficher()" class="no-print" style="background:orange;color:white;padding:8px;border:none;border-radius:5px">Voir toutes sections</button> <button onclick="imprimerUneSection('${sec}')" class="no-print" style="background:purple;color:white;padding:8px;border:none;border-radius:5px">🖨️ Imprimer ${sec}</button>`; document.getElementById('conteneurSections').innerHTML=html; }
+
+window.supprimerCode=async(sec,code)=>{ if(prompt("Code Admin:")!==CODE_SECRET) return alert("Faux"); if(!confirm(`Supprimer ${code} de ${sec} le ${jourActuel}?`)) return; await remove(ref(db,'cantine/'+jourActuel+'/'+sec+'/'+code)); }
+window.resetJour=async()=>{ if(prompt("Code RESET:")!==CODE_RESET) return alert("Faux"); if(!confirm(`EFFACER TOUT le ${jourActuel} pour TOUS les appareils? Historique de ce jour perdu!`)) return; await remove(ref(db,'cantine/'+jourActuel)); }
+window.deconnexion=()=>{ document.getElementById('pagePrincipale').classList.add('cacher'); document.getElementById('pageLogin').classList.remove('cacher'); }
+window.allerSection=()=>{ sectionBloquee=document.getElementById('selectSectionNav').value; afficherUne(sectionBloquee); }
+window.rechercherAgent=()=>{ let code=document.getElementById('rechercheAgent').value.trim().toUpperCase(); let res=document.getElementById('resultatRecherche'); if(!code){ res.innerHTML=""; return; } for(let sec in allData){ for(let k in allData[sec]){ if(k.includes(code)){ let ag=allData[sec][k]; res.innerHTML=`<div style="border:1px solid green;padding:8px;background:#f8f9fa;border-radius:5px"><b>${k}</b> → ${sec} - ${ag.mange?'🍽️ MANGÉ':'✅ PRÉSENT'}<br><button onclick="sectionBloquee='${sec}';afficherUne('${sec}')" style="background:#007bff;color:white;padding:5px;border:none;border-radius:4px;margin-top:5px">Voir section</button></div>`; return; } } } res.innerHTML=`<span style="color:red">Non trouvé le ${jourActuel}</span>`; }
+
+// IMPRESSION
+window.imprimerSectionPrompt=()=>{ let sec=prompt("Nom section à imprimer? Ex: DECO HOMME"); if(!sec) return; sec=sec.toUpperCase(); let found=sections.find(s=>s.includes(sec)); if(found) sec=found; if(!allData[sec] || Object.keys(allData[sec]).length===0) return alert("Aucune donnée pour "+sec+" le "+jourActuel); imprimerUneSection(sec); }
+window.imprimerUneSection=(sec)=>{
+ let arr=Object.values(allData[sec]||{}); if(arr.length===0) return alert("Vide");
+ let html=`<h1 style="text-align:center">ECOCAJOU SA ODIENNE - CANTINE</h1><h2 style="text-align:center">SECTION: ${sec}</h2><h3 style="text-align:center">Date: ${jourActuel}</h3><h4 style="text-align:center">Enregistrés: ${arr.length} | Mangé: ${arr.filter(a=>a.mange).length} | Restant: ${arr.length-arr.filter(a=>a.mange).length}</h4><hr><table border="1" style="width:100%;border-collapse:collapse"><tr style="background:#007bff;color:white"><th>N°</th><th>CODE</th><th>STATUT</th><th>HEURE</th></tr>`;
+ arr.forEach((a,i)=>{ let h=a.heureMange?new Date(a.heureMange).toLocaleTimeString():'-'; html+=`<tr><td style="padding:6px">${i+1}</td><td style="padding:6px">${a.code}</td><td style="padding:6px">${a.mange?'MANGÉ 🍽️':'PRÉSENT ✅'}</td><td style="padding:6px">${h}</td></tr>`; });
+ html+=`</table><p style="text-align:center;margin-top:20px">Imprimé le ${new Date().toLocaleString()}</p>`;
+ let w=window.open('','','height=700,width=900'); w.document.write(html); w.document.close(); w.print();
 }
-
-function nouveauJour() {
-    if(!allData[jourActuel]) {
-        allData[jourActuel] = {};
-        sections.forEach(s => allData[jourActuel][s] = []);
-        sauvegarder();
-    }
-    afficher();
+window.imprimerTout=()=>{
+ let totE=0,totM=0; let html=`<h1 style="text-align:center">ECOCAJOU SA - REGISTRE COMPLET CANTINE</h1><h2 style="text-align:center">Date: ${jourActuel}</h2>`;
+ sections.forEach(sec=>{ let obj=allData[sec]||{}; let arr=Object.values(obj); if(arr.length===0) return; let m=arr.filter(a=>a.mange).length; totE+=arr.length; totM+=m; html+=`<h3>${sec} - Enr:${arr.length} | Mang:${m} | Rest:${arr.length-m}</h3><table border="1" style="width:100%;border-collapse:collapse;margin-bottom:15px"><tr style="background:#007bff;color:white"><th>N°</th><th>CODE</th><th>STATUT</th><th>HEURE MANGÉ</th></tr>`; arr.forEach((a,i)=>{ let h=a.heureMange?new Date(a.heureMange).toLocaleTimeString():'-'; html+=`<tr><td style="padding:4px">${i+1}</td><td style="padding:4px">${a.code}</td><td style="padding:4px">${a.mange?'MANGÉ':'PRÉSENT'}</td><td style="padding:4px">${h}</td></tr>`; }); html+=`</table>`; });
+ html=`<div style="text-align:center"><b>TOTAL JOUR: Enregistrés ${totE} | Mangé ${totM} | Restant ${totE-totM}</b></div><hr>`+html;
+ let w=window.open('','','height=800,width=1000'); w.document.write(html); w.document.close(); w.print();
 }
-
-function chargerJour() {
-    jourActuel = document.getElementById('selectDate').value;
-    sectionBloquee = "";
-    afficher();
-}
-
-function sauvegarder() {
-    localStorage.setItem('registresPointage', JSON.stringify(allData));
-}
-
-function afficher() {
-    document.getElementById('titreDate').innerText = jourActuel;
-    let dataJour = allData[jourActuel] || {};
-
-    if(sectionBloquee!== "" && dataJour[sectionBloquee]){
-        afficherUneSection(sectionBloquee, dataJour[sectionBloquee]);
-        return;
-    }
-
-    let html = '';
-    let totalGeneralEnregistres = 0;
-    let totalGeneralMange = 0;
-    let totalGeneralRestant = 0; // NOUVEAU
-
-    sections.forEach(section => {
-        let agents = dataJour[section] || [];
-        let totalEnregistres = agents.length;
-        let totalMange = agents.filter(a => a.mange).length;
-        let totalRestant = totalEnregistres - totalMange; // NOUVEAU
-
-        totalGeneralEnregistres += totalEnregistres;
-        totalGeneralMange += totalMange;
-        totalGeneralRestant += totalRestant; // NOUVEAU
-
-        // AJOUT DU TOTAL RESTANT ICI
-        html += `<div class="section-bloc">
-            <h3>${section}
-                <span style="font-size:14px; color:blue;">Enregistrés: ${totalEnregistres}</span> |
-                <span style="font-size:14px; color:green;">Ont mangé: ${totalMange}</span> |
-                <span style="font-size:14px; color:red;">Restant: ${totalRestant}</span> <!-- NOUVEAU -->
-            </h3>
-            <ul>`;
-        html += agents.map(a => {
-            let codeAffiche = cacheActif? "******" : a.code;
-            return `<li>${codeAffiche} - ${a.nom || ''} <span class="${a.mange? 'mange' : 'present'}">${a.mange? '🍽️ MANGÉ' : '✅ PRÉSENT'}</span> <button onclick="supprimerCode('${section}', '${a.code}')" style="background:red; padding:2px 5px; font-size:10px; float:right;">X</button></li>`;
-        }).join('');
-        html += `</ul></div>`;
-    });
-
-    // MISE A JOUR DES 3 TOTAUX GENERAUX
-    document.getElementById('totalEnregistres').innerText = `TOTAL ENREGISTRÉS AUJOURD'HUI: ${totalGeneralEnregistres}`;
-    document.getElementById('totalMangeGeneral').innerText = `TOTAL ONT MANGÉ AUJOURD'HUI: ${totalGeneralMange}`;
-    document.getElementById('totalRestantGeneral').innerText = `TOTAL RESTANT AUJOURD'HUI: ${totalGeneralRestant}`; // NOUVEAU
-
-    document.getElementById('conteneurSections').innerHTML = html;
-}
-function ajouterCode() {
-    let code = document.getElementById('codeAjout').value.trim().toUpperCase();
-    let section = document.getElementById('sectionAjout').value;
-    if(!code) return alert("Tapez un code");
-
-    let dejaExiste = false;
-    let sectionTrouvee = '';
-    for(let s in allData[jourActuel]) {
-        if(allData[jourActuel][s].find(a => a.code === code)) {
-            dejaExiste = true; sectionTrouvee = s; break;
-        }
-    }
-    if(dejaExiste) {
-        document.getElementById('msgAjout').innerHTML = `<span style="color:red;">❌ ERREUR : Le code ${code} existe déjà dans ${sectionTrouvee}</span>`;
-        return;
-    }
-    allData[jourActuel][section].push({code: code, nom: '', mange: false});
-    sauvegarder();
-    document.getElementById('msgAjout').innerHTML = `<span style="color:green;">✅ Code ${code} ajouté à ${section}</span>`;
-    document.getElementById('codeAjout').value = '';
-    afficher();
-}
-
-function verifierCode() {
-    let code = document.getElementById('codeVerif').value.trim().toUpperCase();
-    let msgVerif = document.getElementById('msgVerif');
-    if(!code) return alert("Tapez un code");
-
-    let trouve = false;
-    let sectionTrouvee = "";
-    let agentTrouve = null;
-
-    // 1. ON CHERCHE D'ABORD DANS TOUTES LES SECTIONS
-    for(let s in allData[jourActuel]) {
-        let agent = allData[jourActuel][s].find(a => a.code === code);
-        if(agent) {
-            trouve = true;
-            agentTrouve = agent;
-            sectionTrouvee = s;
-            break;
-        }
-    }
-
-    // 2. SI TROUVÉ
-    if(trouve) {
-        if(agentTrouve.mange === false) {
-            agentTrouve.mange = true;
-            msgVerif.innerHTML = `<span style="color:green;"><b>${code}</b> trouvé dans <b>${sectionTrouvee}</b><br>✅ STATUT: PRÉSENT<br>🍽️ IL A DROIT A 1 PLAT<br><b>Validez et donnez lui son plat</b></span>`;
-        } else {
-            msgVerif.innerHTML = `<span style="color:red;"><b>${code}</b> trouvé dans <b>${sectionTrouvee}</b><br>❌ STATUT: A DÉJÀ PRIS SON PLAT<br><b>IL N'A PLUS DROIT A UN AUTRE PLAT AUJOURD'HUI</b></span>`;
-        }
-        sauvegarder();
-        sectionBloquee = sectionTrouvee;
-        afficherUneSection(sectionBloquee, allData[jourActuel][sectionBloquee]);
-        document.getElementById('codeVerif').value = '';
-        document.getElementById('codeVerif').focus();
-
-    // 3. SI PAS TROUVÉ
-    } else {
-        document.getElementById('msgVerif').innerHTML = `<span style="color:red;">❌ Code ${code} non trouvé aujourd'hui</span>`;
-        document.getElementById('codeVerif').value = '';
-        document.getElementById('codeVerif').focus();
-    }
-}
-
-function afficherUneSection(nomSection, agents) {
-    let totalMange = agents.filter(a => a.mange).length;
-    let totalRestant = agents.length - totalMange; // NOUVEAU
-
-    let html = `<div class="section-bloc">
-        <h3>${nomSection}
-            <span style="font-size:14px; color:blue;">Enregistrés: ${agents.length}</span> |
-            <span style="font-size:14px; color:green;">Ont mangé: ${totalMange}</span> |
-            <span style="font-size:14px; color:red;">Restant: ${totalRestant}</span> <!-- NOUVEAU -->
-        </h3>
-        <ul>`;
-    html += agents.map(a => {
-        let codeAffiche = cacheActif? "******" : a.code;
-        return `<li>${codeAffiche} - ${a.nom || ''} <span class="${a.mange? 'mange' : 'present'}">${a.mange? '🍽️ MANGÉ' : '✅ PRÉSENT'}</span></li>`;
-    }).join('');
-    html += `</ul></div>`;
-    html += `<button onclick="sectionBloquee=''; afficher();" style="background: orange; margin-top:10px;">VOIR TOUTES SECTIONS</button>`;
-    document.getElementById('conteneurSections').innerHTML = html;
-}
-
-function supprimerCode(section, code) {
-    let div = document.createElement('div');
-    div.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;";
-    div.innerHTML = `<div style="background:white;padding:20px;border-radius:8px;text-align:center;">
-        <p><b>Tapez le Code Admin pour supprimer</b></p>
-        <input type="password" id="inputAdmin" style="padding:8px; width:200px;"><br><br>
-        <button onclick="validerSuppr('${section}', '${code}')" style="background:#dc3545;">OK</button>
-        <button onclick="document.body.removeChild(this.parentNode.parentNode)" style="background:#6c757d;">Annuler</button>
-    </div>`;
-    document.body.appendChild(div);
-}
-
-function validerSuppr(section, code) {
-    let codeAdmin = document.getElementById('inputAdmin').value;
-    document.body.removeChild(document.body.lastChild);
-    if(codeAdmin!== CODE_SECRET) { alert("❌ Code Admin incorrect!"); return; }
-    if(confirm(`Supprimer le code ${code} de ${section}?`)) {
-        allData[jourActuel][section] = allData[jourActuel][section].filter(a => a.code!== code);
-        sauvegarder(); afficher(); alert(`Code ${code} supprimé ✅`);
-    }
-}
-
-function resetJour() {
-    let code = prompt("⚠️ ATTENTION! Ce code va tout effacer pour aujourd'hui.\nTapez le Code RESET:");
-    if(code!== CODE_RESET) { alert("❌ Code incorrect!"); return; }
-    if(confirm("Voulez-vous vraiment supprimer toutes les données de cette journée?")) {
-        allData[jourActuel] = {}; sections.forEach(s => allData[jourActuel][s] = []);
-        sauvegarder(); sectionBloquee = ""; afficher(); alert("✅ Journée réinitialisée à zéro");
-    }
-}
-
-function imprimerSection() {
-    let section = prompt("Quelle section voulez-vous imprimer?\nEx: DECO, CUISSON");
-    if(!section) return;
-    section = section.toUpperCase();
-    let agentsDeLaSection = allData[jourActuel][section] || [];
-
-    if(agentsDeLaSection.length === 0) { alert("Aucun agent trouvé pour la section: " + section); return; }
-
-    let dateDuJour = new Date().toLocaleDateString('fr-FR');
-    let totalMange = agentsDeLaSection.filter(a => a.mange).length;
-    let htmlImpression = `<h1 style="text-align:center;">LISTE DE POINTAGE CANTINE</h1>
-    <h2 style="text-align:center;">ECOCAJOU SA ODIENNE - SECTION: ${section}</h2>
-    <h3 style="text-align:center;">Date: ${dateDuJour}</h3>
-    <h4 style="text-align:center;">Total Enregistrés: ${agentsDeLaSection.length} | Total Ont Mangé: ${totalMange}</h4><hr>
-    <table border="1" style="width:100%; border-collapse: collapse;">
-    <tr style="background:#007bff; color:white;"><th style="padding:8px;">N°</th><th style="padding:8px;">CODE</th><th style="padding:8px;">STATUT</th></tr>`;
-
-    agentsDeLaSection.forEach((a, index) => {
-        let statut = a.mange? "A MANGÉ 🍽️" : "PRÉSENT ✅";
-        htmlImpression += `<tr><td style="padding:8px;">${index + 1}</td><td style="padding:8px;">${a.code}</td><td style="padding:8px;">${statut}</td></tr>`;
-    });
-    htmlImpression += `</table>`;
-    let fenetreImpression = window.open('', '', 'height=700,width=900');
-    fenetreImpression.document.write(htmlImpression); fenetreImpression.document.close(); fenetreImpression.print();
-}
-
-function toggleCache() {
-    if(!cacheActif) {
-        cacheActif = true; document.getElementById('btnCache').innerText = "🔒 Afficher Codes"; document.getElementById('btnCache').style.background = "#28a745";
-    } else {
-        let code = prompt("Tapez le Code pour AFFICHER les codes:");
-        if(code!== CODE_VOIR) { alert("❌ Code incorrect!"); return; }
-        cacheActif = false; document.getElementById('btnCache').innerText = "👁️ Cacher Codes"; document.getElementById('btnCache').style.background = "#6c757d";
-    }
-    afficher();
-}
-
-function deconnexion() {
-    document.getElementById('pagePrincipale').classList.add('cacher');
-    document.getElementById('pageLogin').classList.remove('cacher');
-    document.getElementById('codeAcces').value = '';
-}
-
-function allerSection() {
-    let sectionChoisie = document.getElementById('selectSectionNav').value;
-    sectionBloquee = sectionChoisie; // On bloque sur cette section
-    let dataJour = allData[jourActuel] || {};
-    afficherUneSection(sectionChoisie, dataJour[sectionChoisie] || []);
-
-    // Scroll auto vers le haut des sections
-    document.getElementById('conteneurSections').scrollIntoView({behavior: 'smooth'});
-}
-
-function rechercherAgent() {
-    let code = document.getElementById('rechercheAgent').value.trim().toUpperCase();
-    let resultatDiv = document.getElementById('resultatRecherche');
-    let dataJour = allData[jourActuel] || {};
-
-    if(code === "") {
-        resultatDiv.innerHTML = "";
-        return;
-    }
-
-    let trouve = false;
-    let sectionTrouvee = "";
-    let agentTrouve = null;
-
-    // On cherche dans toutes les sections
-    for(let s in dataJour) {
-        let agent = dataJour[s].find(a => a.code.includes(code)); // includes = cherche même si on tape que le début
-        if(agent) {
-            trouve = true;
-            agentTrouve = agent;
-            sectionTrouvee = s;
-            break;
-        }
-    }
-
-    if(trouve) {
-        let statut = agentTrouve.mange? "🍽️ A DÉJÀ MANGÉ" : "✅ PRÉSENT - N'A PAS ENCORE MANGÉ";
-        let couleur = agentTrouve.mange? "red" : "green";
-
-        resultatDiv.innerHTML = `
-            <div style="border:1px solid ${couleur}; padding:10px; border-radius:5px; background:#f8f9fa;">
-                <b>Trouvé!</b><br>
-                Code: <b>${agentTrouve.code}</b><br>
-                Section: <b>${sectionTrouvee}</b><br>
-                Statut: <span style="color:${couleur}; font-weight:bold;">${statut}</span><br>
-                <button onclick="allerDirect('${sectionTrouvee}')" style="background:#007bff; margin-top:5px;">Aller à la section</button>
-            </div>
-        `;
-    } else {
-        resultatDiv.innerHTML = `<span style="color:red;">❌ Aucun agent trouvé avec "${code}"</span>`;
-    }
-}
-
-function allerDirect(section) {
-    sectionBloquee = section;
-    let dataJour = allData[jourActuel] || {};
-    afficherUneSection(section, dataJour[section] || []);
-    document.getElementById('conteneurSections').scrollIntoView({behavior: 'smooth'});
-    document.getElementById('rechercheAgent').value = ""; // Vide la recherche
-}
-
-function ajouterAdmin() {
-    let nom = document.getElementById('nomAdmin').value.trim();
-    if(!nom) return alert("Tapez un nom");
-
-    // On génère un code spécial: ADM-1, ADM-2...
-    let numero = allData[jourActuel]["ADMINISTRATION"].length + 1;
-    let codeAdmin = "ADM-" + numero;
-
-    allData[jourActuel]["ADMINISTRATION"].push({
-        code: codeAdmin, 
-        nom: nom, 
-        mange: false
-    });
-    
-    sauvegarder();
-    document.getElementById('msgAdmin').innerHTML = `<span style="color:green;">✅ ${nom} ajouté avec le code ${codeAdmin}</span>`;
-    document.getElementById('nomAdmin').value = '';
-    afficher();
-}
-
-</script>
-</body>
-</html>
+</script></body></html>
