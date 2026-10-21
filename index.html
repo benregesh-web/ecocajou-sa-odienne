@@ -2,99 +2,132 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ANNUAIRE V6 - RANGÉ - ODIENNE</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        details {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            background: white
-        }
-
-        summary {
-            padding: 12px 14px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            list-style: none
-        }
-
-        summary::-webkit-details-marker {
-            display: none
-        }
-
-        .section-count {
-            background: #0aa88a;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px
-        }
-
-        .row-mini {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            padding: 6px 10px;
-            border-bottom: 1px solid #f1f1f1
-        }
-
-        .row-mini:last-child {
-            border: none
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ECOCAJOU CANTINE Odienné</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0aa88a">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
+  <div id="login" class="login-card">
+    <div class="logo">🥜</div>
+    <h2>ECOCAJOU CANTINE Odienné</h2><input type="password" id="code" placeholder=" Code d'accès "><button
+      class="btn btn-blue full" onclick="login()">Entrer</button>
+    <p id="err" class="error"></p>
+  </div>
+  <div id="app" class="cacher">
+    <header class="header">
+      <div>
+        <h1>ECOCAJOU SA - CANTINE </h1><small>🟢 <span id="dateTitre"></span> • <span id="adminStatus">🔒 Admin</span> •
+          Annuaire: <b id="countAnn">0</b></small>
+      </div>
+      <div style="display:flex;gap:6px">
+        <a href="annuaireodienne.html?usine=1"
+          style="background:#0aa88a;padding:8px 12px;border-radius:8px;text-decoration:none;color:white;font-weight:bold">📒
+          ANNUAIRE+HORAIRES →</a>
+   
+        <button class="btn btn-dark" onclick="logout()">Sortir</button>
+      </div>
+    </header>
     <div class="container">
-        <div class="card toolbar">
-            <h2>📒 ANNUAIRE - RANGÉ - ODIENNE</h2>
-            <div style="display:flex;gap:8px"><a href="usinedaloa.html"
-                    style="background:#0aa88a;padding:8px 12px;border-radius:8px;text-decoration:none;color:white">←
-                    Cantine ODIENNE</a></div>
-        </div>
-        <div class="card" style="border:2px solid #8b5cf6">
-            <h3>⏰ Horaires par section</h3>
-            <div id="horaireList" style="max-height:300px;overflow:auto"></div><button class="btn btn-green mt"
-                onclick="saveAllHoraires()">💾 Sauver Horaires</button>
-            <p id="msgHoraire"></p>
-        </div>
-        <div class="grid3">
-            <div class="stat blue"><span>TOTAL</span><b id="tTotal">0</b></div>
-            <div class="stat green"><span>AVEC NOM</span><b id="tNom">0</b></div>
-            <div class="stat yellow"><span>SECTIONS</span><b id="tSec">0</b></div>
-        </div>
-        <div class="card"><input id="searchAnn" placeholder="🔍 Rechercher CODE / NOM / SECTION" onkeyup="render()">
-            <div class="flex mt" style="flex-wrap:wrap;gap:6px"><select id="secFilter" style="flex:1"></select><button
-                    class="btn btn-gray" onclick="expandAll()">📂 Tout ouvrir</button><button class="btn btn-gray"
-                    onclick="collapseAll()">📁 Tout fermer</button><input type="file" id="fileImport"
-                    accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)"><button
-                    class="btn btn-green" onclick="document.getElementById('fileImport').click()"
-                    style="background:#16a34a;color:white">📥 Importer Excel</button><button class="btn btn-purple"
-                    onclick="exportAnn()">📊 Export</button><button class="btn btn-red" onclick="resetAll()"
-                    style="background: #ef4444; color: white">🗑️ RESET</button></div>
-        </div>
-        <p id="msgImport"></p>
+      <div class="card toolbar"><input type="date" id="dateSel"><button class="btn btn-blue" onclick="chargerJour()">📅
+          Voir</button><button class="btn btn-green" onclick="aujourdhui()">Aujourd'hui</button><button
+          class="btn btn-red" onclick="resetJour()" style="background:#ef4444;color:white">🗑️ RESET JOUR</button></div>
+      <div class="grid3">
+        <div class="stat blue"><span>ENREGISTRÉS</span><b id="tE">0</b></div>
+        <div class="stat green"><span>ONT MANGÉ</span><b id="tM">0</b></div>
+        <div class="stat yellow"><span>RESTANT</span><b id="tR">0</b></div>
+      </div>
+      <div class="card"><button class="btn btn-yellow full" onclick="voirResteAvecCode()">🔴 Voir RESTE avec
+          CODE</button></div>
+      <div id="cardReste" class="card cacher" style="border:2px solid #ef4444">
+        <h3 style="color:red">🔴 RESTE - N'ont pas encore mangé</h3>
+        <div id="listeReste" style="max-height:300px;overflow:auto"></div><button class="btn btn-gray mt"
+          onclick="document.getElementById('cardReste').classList.add('cacher')">Fermer</button>
+      </div>
+      <div class="card" style="border:2px solid #0aa88a">
+        <h3>➕ Ajouter Code (multi: 97; 1924; 16)</h3>
+        <div class="flex"><textarea id="codeAjout" placeholder="CODEs séparés par ; ex: 97; 1924; 16"
+            style="width:100%;height:60px"></textarea></div>
+        <div class="flex mt"><input id="nomAjout" placeholder="NOM (1ère fois)" style="flex:2"><select id="secAjout"
+            style="flex:2"></select><button class="btn btn-green" onclick="ajouterCode()">Ajouter Tout</button></div>
+        <p id="msgAjout"></p><small style="color:gray">Si code existe dans annuaire → section auto (jumeau
+          invisible)</small>
+      </div>
+      <div class="card">
+        <h3>🍽️ Donner Plat (multi + contrôle heure ⏰)</h3>
+        <div class="flex"><textarea id="codeVerif" placeholder="Vérifier: 97; 1924; 16"
+            style="width:100%;height:60px"></textarea><button class="btn btn-blue" onclick="verifierCode()">Vérifier
+            Tout</button></div>
+        <p id="msgVerif" class="bold"></p>
+      </div>
+      <div class="card"><input id="search" placeholder="🔍 Rechercher NOM ou CODE (ex: Koné ou 97)"
+          onkeyup="rechercher()">
+        <div id="resSearch"></div>
+        <div class="flex mt"><select id="secNav"></select><button class="btn btn-purple"
+            onclick="filtrerSec()">Filtrer</button><button class="btn btn-gray" onclick="voirTout()">Voir
+            tout</button><button class="btn btn-purple" onclick="exportExcel()">📊 Excel</button><button
+            class="btn btn-black" onclick="imprimerTout()">🖨️ Imprimer</button></div>
+      </div>
+      <div id="conteneur"></div>
     </div>
-    <div id="listeAnn"></div>
-    </div>
-    <script
-        type="module">import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"; import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"; const firebaseConfig = { apiKey: "AIzaSyAS-thQH1Iy43biW_xRUMamDrxVbEYDjfc", authDomain: "ecocajou-cantine-odienne.firebaseapp.com", databaseURL: "https://ecocajou-cantine-odienne-default-rtdb.firebaseio.com", projectId: "ecocajou-cantine-odienne", storageBucket: "ecocajou-cantine-odienne.firebasestorage.app", messagingSenderId: "197945332133", appId: "1:197945332133:web:69ff670052cad9cde5d84c" }; const app = initializeApp(firebaseConfig); const db = getDatabase(app); const CODE_SUPPR = "ECOBAMBA2026"; const sections = ["DPM GROS SALLE", "MAGASIN NOIX BRUTE", "QUALITE NOIX BRUTE", "CALLIBRAGE", "CALLIBRAGE CARISTE", "CHAUDIERE", "COQUE", "COQUE CHAUFFEUR", "LAVAGE EQUIPEMENT", "CUISSON", "CUISSON CARISTE", "DECO HOMME", "DECO FEMME", "QUALITE DECO", "ENTRETIEN DECO", "SCOOPING", "SCOOPING CORRECTION", "ETUVAGE", "GESTIONNAIRE/MAGASIN PIECES DE RECHANGE", "MAINTENANCE", "CONTROLEUR FOUR", "DP AUTO", "CONCASSAGE", "CLASS MANUEL", "CLASS AUTO", "EMBALLAGE 1", "EMBALLAGE 2", "ENTRETIEN EMBALLAGE", "MAGASIN PRODUIT FINIS", "DPM Elèves", "Niamatogola", "DPM CORRECTRISES", "ENTRETIEN DPM", "ENTRETIEN ZONE BLANCHE", "ENTRETIEN ADMINISTRATION", "OPERATEUR PESEE", "SECTION HYGIENE", "BUANDERIE", "ENTRETIEN", "ENTRETIEN ZONE NON BATI", "CANTINE", "DISTRI.PROD MAN", "ADMINISTRATION", "ELEVES GARCONS"]; let annuaire = {}; let horaires = {}; function toSafe(s) { return s.replace(/\//g, "___"); } function toEcCode(r) { if (!r) return null; let d = String(r).replace(/\D/g, ''); if (!d) return null; return 'Ec_' + String(parseInt(d, 10)).padStart(5, '0'); } function init() { let sel = document.getElementById('secFilter'); sel.innerHTML = '<option value="">Toutes sections</option>'; sections.forEach(s => { let o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); onValue(ref(db, 'annuaire_odienne'), s => { annuaire = s.val() || {}; render(); }); onValue(ref(db, 'horaires_sections_odienne'), s => { horaires = s.val() || {}; renderHoraires(); }); } init(); window.renderHoraires = function () { let html = ""; sections.forEach(sec => { let safe = toSafe(sec); let h = horaires[safe] || horaires[sec] || { debut: "", fin: "" }; html += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px"><div style="flex:2"><b>' + sec + '</b></div><input type="time" id="debut_' + safe + '" value="' + (h.debut || '') + '" style="width:105px"><span>-</span><input type="time" id="fin_' + safe + '" value="' + (h.fin || '') + '" style="width:105px"></div>'; }); document.getElementById('horaireList').innerHTML = html; }; window.saveAllHoraires = async function () { let admin = prompt('Code ADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } for (let sec of sections) { let safe = toSafe(sec); let debut = document.getElementById('debut_' + safe).value; let fin = document.getElementById('fin_' + safe).value; if (debut) { await set(ref(db, 'horaires_sections_odienne/' + safe), { section: sec, debut: debut, fin: fin }); } else { await remove(ref(db, 'horaires_sections_odienne/' + safe)); } } document.getElementById('msgHoraire').innerHTML = '✅ Horaires sauvés'; }; window.render = function () { let q = document.getElementById('searchAnn').value.toLowerCase().trim(); let secF = document.getElementById('secFilter').value; let grouped = {}; Object.values(annuaire).forEach(item => { if (secF && item.section !== secF) return; if (q && !(item.code.toLowerCase().includes(q) || (item.nom && item.nom.toLowerCase().includes(q)) || item.section.toLowerCase().includes(q))) return; if (!grouped[item.section]) grouped[item.section] = []; grouped[item.section].push(item); }); let html = ""; let total = 0, avec = 0; let secKeys = Object.keys(grouped).sort(); secKeys.forEach(sec => { let arr = grouped[sec].sort((a, b) => a.code.localeCompare(b.code)); total += arr.length; avec += arr.filter(x => x.nom).length; let h = horaires[toSafe(sec)] || horaires[sec]; let horaireTxt = h ? '⏰ ' + h.debut + '-' + h.fin : ''; html += '<details ' + (q || secF ? 'open' : '') + '><summary><span>' + sec + ' <small style="color:#8b5cf6">' + horaireTxt + '</small></span><span class="section-count">' + arr.length + '</span></summary>'; arr.forEach(item => { html += '<div class="row-mini"><div style="width:85px"><b>' + item.code + '</b></div><input id="nom_' + item.code + '" value="' + (item.nom || '') + '" placeholder="Nom..." style="flex:1;padding:6px"><select id="sec_' + item.code + '" style="flex:1">' + sections.map(s => '<option value="' + s + '" ' + (s === item.section ? 'selected' : '') + '>' + s + '</option>').join('') + '</select><button class="btn btn-green" onclick="save(\'' + item.code + '\')" style="padding:6px 10px">💾</button><button class="btn btn-red" onclick="del(\'' + item.code + '\')" style="background:#ef4444;color:white;padding:6px 10px">X</button></div>'; }); html += '</details>'; }); document.getElementById('listeAnn').innerHTML = html || '<div class="card">Aucun résultat</div>'; document.getElementById('tTotal').innerText = Object.keys(annuaire).length; document.getElementById('tNom').innerText = Object.values(annuaire).filter(x => x.nom).length; document.getElementById('tSec').innerText = Object.keys(grouped).length; }; window.expandAll = function () { document.querySelectorAll('details').forEach(d => d.open = true); }; window.collapseAll = function () { document.querySelectorAll('details').forEach(d => d.open = false); }; window.save = async function (code) { let nom = document.getElementById('nom_' + code).value.trim(); let sec = document.getElementById('sec_' + code).value; let ancien = annuaire[code]?.nom || ""; if (ancien && ancien !== nom) { let admin = prompt('Modif verrouillée ' + ancien + '\nADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } } await update(ref(db, 'annuaire_odienne/' + code), { nom: nom, section: sec }); }; window.del = async function (code) { if (!confirm('Supprimer ' + code + '?')) return; let admin = prompt('ADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } await remove(ref(db, 'annuaire_odienne/' + code)); }; window.exportAnn = function () { let data = Object.values(annuaire).map(a => ({ Code: a.code, Nom: a.nom || "", Section: a.section })); let ws = XLSX.utils.json_to_sheet(data); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Annuaire"); XLSX.writeFile(wb, 'ANNUAIRE_ODIENNE.xlsx'); };
-            window.resetAll = async function () {
-                let admin = prompt('Code ADMIN pour RESET TOTAL:');
-                if (admin !== CODE_SUPPR) { alert('faux code'); return; }
-                if (!confirm('⚠️ TU VAS SUPPRIMER TOUT L\' ANNUAIRE ODIENNE!\nTu es sur?')) return;
-                if (!confirm('Dernière confirmation : TOUT effacer?')) return;
-                await remove(ref(db, 'annuaire_ODIENNE'));
-                alert('✅ Annuaire_ODIENNE vidé');
-            }
-            window.importExcel = async function (e) { let file = e.target.files[0]; if (!file) return; document.getElementById('msgImport').innerHTML = '⏳ Import...'; let reader = new FileReader(); reader.onload = async function (evt) { let data = new Uint8Array(evt.target.result); let wb = XLSX.read(data, { type: 'array' }); let sheet = wb.Sheets[wb.SheetNames[0]]; let json = XLSX.utils.sheet_to_json(sheet); let ok = 0; for (let row of json) { let rawCode = row.Code || row.code || Object.values(row)[0]; let rawNom = row.Nom || row.nom || ""; let rawSec = row.Section || row.section || ""; let code = toEcCode(rawCode); if (!code) continue; let sec = String(rawSec).trim(); let secOk = sections.find(s => s.toUpperCase() === sec.toUpperCase()) || sec; if (!secOk) continue; await set(ref(db, 'annuaire_odienne/' + code), { code: code, nom: String(rawNom).trim(), section: secOk }); ok++; } document.getElementById('msgImport').innerHTML = '✅ Importé: ' + ok; e.target.value = ''; }; reader.readAsArrayBuffer(file); }; document.getElementById('secFilter').addEventListener('change', render); </script>
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"; 
+    
+    const firebaseConfig = { 
+      apiKey: "AIzaSyAS-thQH1Iy43biW_xRUMamDrxVbEYDjfc", 
+      authDomain: "ecocajou-cantine-odienne.firebaseapp.com", 
+      databaseURL: "https://ecocajou-cantine-odienne-default-rtdb.firebaseio.com", 
+      projectId: "ecocajou-cantine-odienne", 
+      storageBucket: "ecocajou-cantine-odienne.firebasestorage.app", 
+      messagingSenderId: "197945332133", 
+      appId: "1:197945332133:web:69ff670052cad9cde5d84c" 
+    }; 
+    
+    const app = initializeApp(firebaseConfig); 
+    const db = getDatabase(app); 
+    
+     
+    const CODE_LOGIN = "ECOBAMBA2027";
+    const CODE_SUPPR = "ECOBAMBA2027";
+
+    const sections = ["DPM GRANDS SALLE", "MAGASIN NOIX BRUTE", "QUALITE NOIX BRUTE", "CALLIBRAGE", "CALLIBRAGE CARISTE", "CHAUDIERE", "COQUE", "COQUE CHAUFFEUR", "LAVAGE EQUIPEMENT", "CUISSON", "CUISSON CARISTE", "DECO HOMME", "DECO FEMME", "QUALITE DECO", "ENTRETIEN DECO", "SCOOPING", "SCOOPING CORRECTION", "ETUVAGE", "GESTIONNAIRE/MAGASIN PIECES DE RECHANGE", "MAINTENANCE", "CONTROLEUR FOUR", "DP AUTO", "CONCASSAGE", "CLASS MANUEL", "CLASS AUTO", "EMBALLAGE 1", "EMBALLAGE 2", "ENTRETIEN EMBALLAGE", "MAGASIN PRODUIT FINIS", "DPM Elèves", "Niamatogola", "DPM CORRECTRISES", "ENTRETIEN DPM", "ENTRETIEN ZONE BLANCHE", "ENTRETIEN ADMINISTRATION", "OPERATEUR PESEE", "SECTION HYGIENE", "BUANDERIE", "ENTRETIEN", "ENTRETIEN ZONE NON BATI", "CANTINE", "DISTRI.PROD MAN", "ADMINISTRATION", "ELEVES GARCONS"]; function toSafe(s) { return s.replace(/\//g, "___"); } function toEcCode(raw) { if (!raw) return null; let d = String(raw).replace(/\D/g, ''); if (!d) return null; let n = parseInt(d, 10); if (isNaN(n)) return null; return 'Ec_' + String(n).padStart(5, '0'); } let jour = new Date().toISOString().split('T')[0]; let allData = {}; let annuaire = {}; let horaires = {}; let filtre = ""; let isAdmin = false; 
+    function initSelect() { let s1 = document.getElementById('secAjout'); 
+    let s2 = document.getElementById('secNav'); s1.innerHTML = '<option value="">-- Auto si connu --</option>'; 
+    s2.innerHTML = '<option value="">Toutes</option>'; 
+    sections.forEach(function (s) { let o1 = document.createElement('option'); o1.value = s; 
+    o1.textContent = s; s1.appendChild(o1); let o2 = document.createElement('option'); o2.value = s; 
+    o2.textContent = s; s2.appendChild(o2); }); document.getElementById('dateSel').value = jour; 
+    if (localStorage.getItem('ecocajou_cantine') === 'ok') { document.getElementById('login').classList.add('cacher'); 
+    document.getElementById('app').classList.remove('cacher'); ecouter(); } } initSelect(); 
+         document.getElementById('code').addEventListener('input', function () { 
+      let v = this.value.trim().toUpperCase();
+      if (v === CODE_LOGIN) { login(); } 
+    }); 
+    window.login = function () { 
+      let val = document.getElementById('code').value.trim().toUpperCase();
+      console.log("Code tapé:", val);
+      if (val === CODE_LOGIN) { 
+        localStorage.setItem('ecocajou_cantine', 'ok'); 
+        document.getElementById('login').classList.add('cacher'); 
+        document.getElementById('app').classList.remove('cacher'); 
+        ecouter(); 
+      } else { 
+        document.getElementById('err').innerText = "Code faux: "; 
+      } 
+    };
+    window.logout = function () { localStorage.removeItem('ecocajou_cantine'); document.getElementById('app').classList.add('cacher'); document.getElementById('login').classList.remove('cacher'); isAdmin = false; }; function ecouter() { document.getElementById('dateTitre').innerText = jour; onValue(ref(db, 'cantine/' + jour), function (snap) { allData = snap.val() || {}; render(); }); onValue(ref(db, 'annuaire'), function (snap) { annuaire = snap.val() || {}; document.getElementById('countAnn').innerText = Object.keys(annuaire).length; render(); }); onValue(ref(db, 'horaires_sections'), function (snap) { horaires = snap.val() || {}; }); } window.chargerJour = function () { jour = document.getElementById('dateSel').value; ecouter(); }; window.aujourdhui = function () { jour = new Date().toISOString().split('T')[0]; document.getElementById('dateSel').value = jour; ecouter(); }; function getHoraireSec(sec) { let safe = toSafe(sec); return horaires[safe] || horaires[sec] || null; } function checkHeure(sec) { let h = getHoraireSec(sec); if (!h || !h.debut) return { ok: true }; let now = new Date(); let nowMin = now.getHours() * 60 + now.getMinutes(); let [dh, dm] = h.debut.split(':').map(Number); let [fh, fm] = h.fin ? h.fin.split(':').map(Number) : [dh, dm + 90]; let debut = dh * 60 + dm; let fin = fh * 60 + fm; let heureNow = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'); if (nowMin < debut) { return { ok: false, msg: '⏰ TROP TÔT! ' + sec + ' c\'est à ' + h.debut + ' (il est ' + heureNow + ')' }; } if (nowMin > fin + 30) { return { ok: false, msg: '⏰ TROP TARD! ' + sec + ' était ' + h.debut + '-' + h.fin + ' (il est ' + heureNow + ')' }; } return { ok: true }; } function trouverCode(code) { let codesToTry = [code, code.toUpperCase(), toEcCode(code)].filter(Boolean); for (let k in allData) { for (let t of codesToTry) { if (allData[k] && allData[k][t]) return { safe: k, data: allData[k][t] }; } } for (let k1 in allData) { let l1 = allData[k1]; if (typeof l1 === 'object') { for (let k2 in l1) { let l2 = l1[k2]; for (let t of codesToTry) { if (l2 && l2[t] && l2[t].code) return { safe: k1 + '/' + k2, data: l2[t] }; } } } } return null; } function getCodesPourSection(sec) { let safe = toSafe(sec); let out = {}; if (allData[safe]) { Object.assign(out, allData[safe]); } if (sec.includes("/")) { let p = sec.split("/"); if (allData[p[0]] && allData[p[0]][p[1]]) { Object.assign(out, allData[p[0]][p[1]]); } } else { if (allData[sec]) { let first = Object.keys(allData[sec])[0]; if (first && allData[sec][first] && allData[sec][first].code) { Object.assign(out, allData[sec]); } } } return out; } window.ajouterCode = async function () { let brut = document.getElementById('codeAjout').value.trim(); let nomSaisi = document.getElementById('nomAjout').value.trim(); let secChoisi = document.getElementById('secAjout').value; if (!brut) { alert("Code vide"); return; } let liste = brut.split(/[;,\n\s]+/).filter(Boolean); let ok = 0, deja = 0; let msg = ""; for (let item of liste) { let code = toEcCode(item); if (!code) continue; let secFinal = secChoisi; let nomFinal = nomSaisi; if (annuaire[code]) { secFinal = annuaire[code].section; if (!nomFinal) nomFinal = annuaire[code].nom; } if (!secFinal) { msg += '<span style="color:red">❌ ' + code + ' : choisis section (1ère fois)</span><br>'; continue; } if (trouverCode(code)) { deja++; continue; } let safe = toSafe(secFinal); await set(ref(db, 'cantine/' + jour + '/' + safe + '/' + code), { code: code, mange: false, heure: Date.now(), section: secFinal }); if (!annuaire[code] || nomFinal) { await set(ref(db, 'annuaire/' + code), { code: code, nom: nomFinal || annuaire[code]?.nom || "", section: secFinal }); } ok++; } document.getElementById('msgAjout').innerHTML = '✅ Ajoutés: ' + ok + ' | Déjà: ' + deja + '<br>' + msg; document.getElementById('codeAjout').value = ''; document.getElementById('nomAjout').value = ''; }; window.verifierCode = async function () { let brut = document.getElementById('codeVerif').value.trim(); if (!brut) return; let liste = brut.split(/[;,\n\s]+/).filter(Boolean); let donne = 0, dejaM = 0, non = 0, hors = 0; let details = ""; for (let item of liste) { let code = toEcCode(item); if (!code) continue; let found = trouverCode(code); if (!found) { non++; details += '<span style="color:red">❌ ' + code + ' non trouvé</span><br>'; continue; } if (found.data.mange) { dejaM++; details += '<span style="color:orange">⚠️ ' + code + ' déjà mangé</span><br>'; continue; } let secVerif = found.data.section || annuaire[code]?.section || found.safe.replace("___", "/"); let chk = checkHeure(secVerif); if (!chk.ok) { let force = prompt(chk.msg + '\n\nCode ADMIN pour forcer?'); if (force !== CODE_SUPPR) { hors++; details += '<span style="color:purple">' + chk.msg + '</span><br>'; continue; } } let safe = toSafe(found.data.section || found.safe.replace("___", "/")); await set(ref(db, 'cantine/' + jour + '/' + safe + '/' + code), { code: code, mange: true, heureMange: Date.now(), section: found.data.section || safe.replace("___", "/"), heure: found.data.heure }); donne++; details += '<span style="color:green">✅ ' + code + ' ' + (annuaire[code]?.nom || '') + ' → PLAT DONNÉ</span><br>'; } document.getElementById('msgVerif').innerHTML = 'Donné: ' + donne + ' | Déjà: ' + dejaM + ' | Hors heure: ' + hors + ' | Non: ' + non + '<br>' + details; document.getElementById('codeVerif').value = ''; }; window.saveNom = async function (code) { let input = document.getElementById('inputNom_' + code); let nouveauNom = input.value.trim(); if (!nouveauNom) { alert("Nom vide"); return; } let ancien = annuaire[code]?.nom || ""; if (ancien && ancien !== nouveauNom) { let admin = prompt('Nom déjà verrouillé: ' + ancien + '\nCode ADMIN pour modifier:'); if (admin !== CODE_SUPPR) { alert("Faux"); return; } } await update(ref(db, 'annuaire/' + code), { nom: nouveauNom }); }; window.render = function () { let html = ""; let tot = 0; let mang = 0; sections.forEach(function (sec) { if (filtre && filtre !== sec) return; let data = getCodesPourSection(sec); let arr = Object.values(data); if (arr.length === 0) return; tot += arr.length; mang += arr.filter(a => a.mange).length; let safe = toSafe(sec); let h = getHoraireSec(sec); let horaireTxt = h ? '⏰ ' + h.debut + '-' + h.fin : ''; let listHtml = ""; arr.forEach(function (a) { let heure = a.heureMange ? new Date(a.heureMange).toLocaleTimeString() : ''; let badge = a.mange ? '<span class="badge mange">MANGÉ ' + heure + '</span>' : '<span class="badge present">PRÉSENT</span>'; let nomAffiche = annuaire[a.code]?.nom || ""; let nomBlock = '<div style="display:flex;gap:4px"><input id="inputNom_' + a.code + '" value="' + nomAffiche + '" placeholder="Nom..." style="width:120px"><button class="btn btn-blue" style="padding:2px 6px" onclick="saveNom(\'' + a.code + '\')">💾</button>' + (nomAffiche ? '<span style="font-size:12px">🔒</span>' : '') + '</div>'; listHtml += '<div class="row" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between;width:100%"><span><b>' + a.code + '</b> ' + badge + '</span><button class="btn-x" onclick="supprCode(\'' + safe + '\',\'' + a.code + '\')">X</button></div><div style="margin-top:4px">' + nomBlock + '</div></div>'; }); html += '<div class="card"><div class="card-head"><h3>' + sec + ' <small style="color:#8b5cf6">' + horaireTxt + '</small></h3><span>Enr: ' + arr.length + ' • Mangé: ' + arr.filter(a => a.mange).length + '</span></div>' + listHtml + '</div>'; }); if (!html) { html = '<div class="card">Aucune donnée pour ' + jour + '</div>'; } document.getElementById('tE').innerText = tot; document.getElementById('tM').innerText = mang; document.getElementById('tR').innerText = tot - mang; document.getElementById('conteneur').innerHTML = html; }; window.supprCode = async function (safe, code) { if (!confirm('Supprimer ' + code + ' du jour? (annuaire reste)')) return; if (!isAdmin) { let admin = prompt('Code ADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } isAdmin = true; document.getElementById('adminStatus').innerText = '🔓 Admin'; } await remove(ref(db, 'cantine/' + jour + '/' + safe + '/' + code)); }; window.filtrerSec = function () { filtre = document.getElementById('secNav').value; render(); }; window.voirTout = function () { filtre = ""; render(); }; window.voirResteAvecCode = function () { let h = ""; let c = 0; sections.forEach(function (sec) { let data = getCodesPourSection(sec); let arr = Object.values(data).filter(a => !a.mange); if (!arr.length) return; h += '<div style="margin-bottom:10px;border:1px solid #fecaca;padding:6px;border-radius:6px"><b>' + sec + ' (' + arr.length + ')</b><br>'; arr.forEach(function (a) { let nom = annuaire[a.code]?.nom || ""; h += '<span style="display:inline-block;background:#fee2e2;padding:3px 8px;margin:2px;border-radius:4px;border:1px solid red"><b>' + a.code + '</b> ' + (nom ? '-' + nom : '') + '</span> '; }); h += '</div>'; c += arr.length; }); if (c === 0) h = '<p style="color:green">✅ Tout le monde a mangé!</p>'; else h = '<p><b>Total RESTE: ' + c + '</b></p>' + h; document.getElementById('listeReste').innerHTML = h; document.getElementById('cardReste').classList.remove('cacher'); }; window.resetJour = async function () { if (!confirm('⚠️ SUPPRIMER TOUT pour ' + jour + '? Annuaire reste!')) return; if (!confirm('🚨 DERNIERE CONFIRMATION')) return; let admin = prompt('Code ADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } await remove(ref(db, 'cantine/' + jour)); alert('✅ Jour vidé'); }; window.rechercher = function () { let brut = document.getElementById('search').value.trim(); if (!brut) { document.getElementById('resSearch').innerHTML = ""; return; } let q = toEcCode(brut) || brut.toUpperCase(); let res = ""; for (let code in annuaire) { if (code.includes(q) || (annuaire[code].nom && annuaire[code].nom.toLowerCase().includes(brut.toLowerCase()))) { res += '<div class="search-res"><b>' + code + '</b> 👤 ' + (annuaire[code].nom || '') + ' → ' + annuaire[code].section + ' ' + (getHoraireSec(annuaire[code].section) ? '⏰ ' + (getHoraireSec(annuaire[code].section).debut || '') : '') + '</div>'; } } document.getElementById('resSearch').innerHTML = res || '<span style="color:red">Non trouvé</span>'; }; window.exportExcel = function () { let data = []; sections.forEach(function (sec) { let d = getCodesPourSection(sec); Object.values(d).forEach(function (a) { data.push({ Date: jour, Section: sec, Horaire: getHoraireSec(sec) ? getHoraireSec(sec).debut + '-' + getHoraireSec(sec).fin : '', Code: a.code, Nom: annuaire[a.code]?.nom || "", Statut: a.mange ? 'MANGE' : 'PRESENT', Heure: a.heureMange ? new Date(a.heureMange).toLocaleString() : '' }); }); }); let ws = XLSX.utils.json_to_sheet(data); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Cantine"); XLSX.writeFile(wb, 'CANTINE_' + jour + '_V5.xlsx'); }; window.imprimerTout = function () { let html = '<h1>CANTINE V5 - ' + jour + '</h1>'; sections.forEach(function (sec) { let d = getCodesPourSection(sec); let arr = Object.values(d); if (!arr.length) return; let rows = ""; arr.forEach(function (a) { rows += '<tr><td>' + a.code + '</td><td>' + (annuaire[a.code]?.nom || '') + '</td><td>' + (a.mange ? 'MANGE' : 'PRESENT') + '</td><td>' + (a.heureMange ? new Date(a.heureMange).toLocaleTimeString() : '') + '</td></tr>'; }); html += '<h3>' + sec + ' ' + (getHoraireSec(sec) ? '(' + getHoraireSec(sec).debut + '-' + getHoraireSec(sec).fin + ')' : '') + ' (' + arr.length + ')</h3><table border=1 style="width:100%"><tr><th>Code</th><th>Nom</th><th>Statut</th><th>Heure</th></tr>' + rows + '</table><br>'; }); let w = window.open('', '', 'width=1000'); w.document.write(html); w.document.close(); w.print(); };
+  </script>
+  <script>
+    // FIX: Reste toujours à Odienné
+    localStorage.setItem('UBEC_usine', '1');
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+  </script>
 </body>
 
 </html>
