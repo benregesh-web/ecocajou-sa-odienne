@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ANNUAIRE  - RANGÉ</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        details {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: white
+        }
+
+        summary {
+            padding: 12px 14px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none
+        }
+
+        summary::-webkit-details-marker {
+            display: none
+        }
+
+        .section-count {
+            background: #0aa88a;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px
+        }
+
+        .row-mini {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            padding: 6px 10px;
+            border-bottom: 1px solid #f1f1f1
+        }
+
+        .row-mini:last-child {
+            border: none
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card toolbar">
+            <h2>📒 ANNUAIRE V6 - RANGÉ PAR SECTION</h2>
+            <div style="display:flex;gap:8px"><a href="index.html"
+                    style="background:#0aa88a;padding:8px 12px;border-radius:8px;text-decoration:none;color:white">←
+                    Cantine</a></div>
+        </div>
+        <div class="card" style="border:2px solid #8b5cf6">
+            <h3>⏰ Horaires par section</h3>
+            <div id="horaireList" style="max-height:300px;overflow:auto"></div><button class="btn btn-green mt"
+                onclick="saveAllHoraires()">💾 Sauver Horaires</button>
+            <p id="msgHoraire"></p>
+        </div>
+        <div class="grid3">
+            <div class="stat blue"><span>TOTAL</span><b id="tTotal">0</b></div>
+            <div class="stat green"><span>AVEC NOM</span><b id="tNom">0</b></div>
+            <div class="stat yellow"><span>SECTIONS</span><b id="tSec">0</b></div>
+        </div>
+        <div class="card"><input id="searchAnn" placeholder="🔍 Rechercher CODE / NOM / SECTION" onkeyup="render()">
+            <div class="flex mt" style="flex-wrap:wrap;gap:6px"><select id="secFilter" style="flex:1"></select><button
+                    class="btn btn-gray" onclick="expandAll()">📂 Tout ouvrir</button><button class="btn btn-gray"
+                    onclick="collapseAll()">📁 Tout fermer</button><input type="file" id="fileImport"
+                    accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)"><button
+                    class="btn btn-green" onclick="document.getElementById('fileImport').click()"
+                    style="background:#16a34a;color:white">📥 Importer Excel</button><button class="btn btn-purple"
+                    onclick="exportAnn()">📊 Export</button></div>
+            <p id="msgImport"></p>
+        </div>
+        <div id="listeAnn"></div>
+    </div>
+    <script type="module">import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"; import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"; const firebaseConfig = { apiKey: "AIzaSyAS-thQH1Iy43biW_xRUMamDrxVbEYDjfc", authDomain: "ecocajou-cantine-odienne.firebaseapp.com", databaseURL: "https://ecocajou-cantine-odienne-default-rtdb.firebaseio.com", projectId: "ecocajou-cantine-odienne", storageBucket: "ecocajou-cantine-odienne.firebasestorage.app", messagingSenderId: "197945332133", appId: "1:197945332133:web:69ff670052cad9cde5d84c" }; const app = initializeApp(firebaseConfig); const db = getDatabase(app); const CODE_SUPPR = "ECOBAMBA2027"; const sections = ["DPM GRANDS SALLE", "MAGASIN NOIX BRUTE", "QUALITE NOIX BRUTE", "CALLIBRAGE", "CALLIBRAGE CARISTE", "CHAUDIERE", "COQUE", "COQUE CHAUFFEUR", "LAVAGE EQUIPEMENT", "CUISSON", "CUISSON CARISTE", "DECO HOMME", "DECO FEMME", "QUALITE DECO", "ENTRETIEN DECO", "SCOOPING", "SCOOPING CORRECTION", "ETUVAGE", "GESTIONNAIRE/MAGASIN PIECES DE RECHANGE", "MAINTENANCE", "CONTROLEUR FOUR", "DP AUTO", "CONCASSAGE", "CLASS MANUEL", "CLASS AUTO", "EMBALLAGE 1", "EMBALLAGE 2", "ENTRETIEN EMBALLAGE", "MAGASIN PRODUIT FINIS", "DPM Elèves", "Niamatogola", "DPM CORRECTRISES", "ENTRETIEN DPM", "ENTRETIEN ZONE BLANCHE", "ENTRETIEN ADMINISTRATION", "OPERATEUR PESEE", "SECTION HYGIENE", "BUANDERIE", "ENTRETIEN", "ENTRETIEN ZONE NON BATI", "CANTINE", "DISTRI.PROD MAN", "ADMINISTRATION", "ELEVES GARCONS"];
+        let annuaire = {}; let horaires = {}; function toSafe(s) { return s.replace(/\//g, "___"); } function toEcCode(r) { if (!r) return null; let d = String(r).replace(/\D/g, ''); if (!d) return null; return 'Ec_' + String(parseInt(d, 10)).padStart(5, '0'); }
+        function init() { let sel = document.getElementById('secFilter'); sel.innerHTML = '<option value="">Toutes sections</option>'; sections.forEach(s => { let o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }); onValue(ref(db, 'annuaire'), s => { annuaire = s.val() || {}; render(); }); onValue(ref(db, 'horaires_sections'), s => { horaires = s.val() || {}; renderHoraires(); }); } init();
+        window.renderHoraires = function () { let html = ""; sections.forEach(sec => { let safe = toSafe(sec); let h = horaires[safe] || horaires[sec] || { debut: "", fin: "" }; html += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;border-bottom:1px solid #eee;padding-bottom:4px"><div style="flex:2"><b>' + sec + '</b></div><input type="time" id="debut_' + safe + '" value="' + (h.debut || '') + '" style="width:105px"><span>-</span><input type="time" id="fin_' + safe + '" value="' + (h.fin || '') + '" style="width:105px"></div>'; }); document.getElementById('horaireList').innerHTML = html; };
+        window.saveAllHoraires = async function () { let admin = prompt('Code ADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } for (let sec of sections) { let safe = toSafe(sec); let debut = document.getElementById('debut_' + safe).value; let fin = document.getElementById('fin_' + safe).value; if (debut) { await set(ref(db, 'horaires_sections/' + safe), { section: sec, debut: debut, fin: fin }); } else { await remove(ref(db, 'horaires_sections/' + safe)); } } document.getElementById('msgHoraire').innerHTML = '✅ Horaires sauvés'; };
+        window.render = function () {
+            let q = document.getElementById('searchAnn').value.toLowerCase().trim();
+            let secF = document.getElementById('secFilter').value;
+            // Grouper par section
+            let grouped = {};
+            Object.values(annuaire).forEach(item => {
+                if (secF && item.section !== secF) return;
+                if (q && !(item.code.toLowerCase().includes(q) || (item.nom && item.nom.toLowerCase().includes(q)) || item.section.toLowerCase().includes(q))) return;
+                if (!grouped[item.section]) grouped[item.section] = [];
+                grouped[item.section].push(item);
+            });
+            let html = ""; let total = 0, avec = 0;
+            let secKeys = Object.keys(grouped).sort();
+            secKeys.forEach(sec => {
+                let arr = grouped[sec].sort((a, b) => a.code.localeCompare(b.code));
+                total += arr.length; avec += arr.filter(x => x.nom).length;
+                let h = horaires[toSafe(sec)] || horaires[sec]; let horaireTxt = h ? '⏰ ' + h.debut + '-' + h.fin : '';
+                html += '<details ' + (q || secF ? 'open' : '') + '><summary><span>' + sec + ' <small style="color:#8b5cf6">' + horaireTxt + '</small></span><span class="section-count">' + arr.length + '</span></summary>';
+                arr.forEach(item => {
+                    html += '<div class="row-mini"><div style="width:85px"><b>' + item.code + '</b></div><input id="nom_' + item.code + '" value="' + (item.nom || '') + '" placeholder="Nom..." style="flex:1;padding:6px"><select id="sec_' + item.code + '" style="flex:1">' + sections.map(s => '<option value="' + s + '" ' + (s === item.section ? 'selected' : '') + '>' + s + '</option>').join('') + '</select><button class="btn btn-green" onclick="save(\'' + item.code + '\')" style="padding:6px 10px">💾</button><button class="btn btn-red" onclick="del(\'' + item.code + '\')" style="background:#ef4444;color:white;padding:6px 10px">X</button></div>';
+                });
+                html += '</details>';
+            });
+            document.getElementById('listeAnn').innerHTML = html || '<div class="card">Aucun résultat</div>';
+            document.getElementById('tTotal').innerText = Object.keys(annuaire).length;
+            document.getElementById('tNom').innerText = Object.values(annuaire).filter(x => x.nom).length;
+            document.getElementById('tSec').innerText = Object.keys(grouped).length;
+        };
+        window.expandAll = function () { document.querySelectorAll('details').forEach(d => d.open = true); };
+        window.collapseAll = function () { document.querySelectorAll('details').forEach(d => d.open = false); };
+        window.save = async function (code) { let nom = document.getElementById('nom_' + code).value.trim(); let sec = document.getElementById('sec_' + code).value; let ancien = annuaire[code]?.nom || ""; if (ancien && ancien !== nom) { let admin = prompt('Modif verrouillée ' + ancien + '\nADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } } await update(ref(db, 'annuaire/' + code), { nom: nom, section: sec }); };
+        window.del = async function (code) { if (!confirm('Supprimer ' + code + '?')) return; let admin = prompt('ADMIN:'); if (admin !== CODE_SUPPR) { alert('Faux'); return; } await remove(ref(db, 'annuaire/' + code)); };
+        window.exportAnn = function () { let data = Object.values(annuaire).map(a => ({ Code: a.code, Nom: a.nom || "", Section: a.section })); let ws = XLSX.utils.json_to_sheet(data); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Annuaire"); XLSX.writeFile(wb, 'ANNUAIRE.xlsx'); };
+        window.importExcel = async function (e) { let file = e.target.files[0]; if (!file) return; document.getElementById('msgImport').innerHTML = '⏳ Import...'; let reader = new FileReader(); reader.onload = async function (evt) { let data = new Uint8Array(evt.target.result); let wb = XLSX.read(data, { type: 'array' }); let sheet = wb.Sheets[wb.SheetNames[0]]; let json = XLSX.utils.sheet_to_json(sheet); let ok = 0; for (let row of json) { let rawCode = row.Code || row.code || Object.values(row)[0]; let rawNom = row.Nom || row.nom || ""; let rawSec = row.Section || row.section || ""; let code = toEcCode(rawCode); if (!code) continue; let sec = String(rawSec).trim(); let secOk = sections.find(s => s.toUpperCase() === sec.toUpperCase()) || sec; if (!secOk) continue; await set(ref(db, 'annuaire/' + code), { code: code, nom: String(rawNom).trim(), section: secOk }); ok++; } document.getElementById('msgImport').innerHTML = '✅ Importé: ' + ok; e.target.value = ''; }; reader.readAsArrayBuffer(file); };
+        document.getElementById('secFilter').addEventListener('change', render);
+    </script>
+</body>
+
+</html>
